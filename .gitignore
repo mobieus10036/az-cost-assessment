@@ -21,6 +21,11 @@ logs/
 # Reports (optional - uncomment if you don't want to commit reports)
 # reports/*.json
 
+# Operational scripts (backup management, etc.)
+scripts/enable-backup-*.ps1
+scripts/update-backup-*.ps1
+scripts/*-operational.ps1
+
 # IDE
 .vscode/
 .idea/
