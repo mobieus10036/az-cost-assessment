@@ -1,0 +1,30 @@
+{
+  "environment": "production",
+  "azure": {
+    "costManagementApi": {
+      "endpoint": "https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.CostManagement/",
+      "apiVersion": "2021-01-01",
+      "apiKey": "YOUR_COST_MANAGEMENT_API_KEY"
+    },
+    "resourceApi": {
+      "endpoint": "https://management.azure.com/subscriptions/{subscriptionId}/resources",
+      "apiVersion": "2021-04-01",
+      "apiKey": "YOUR_RESOURCE_API_KEY"
+    },
+    "cosmosDb": {
+      "endpoint": "https://your-cosmosdb-account.documents.azure.com:443/",
+      "key": "YOUR_COSMOS_DB_KEY",
+      "database": "FinOpsDB",
+      "container": "FinOpsContainer"
+    }
+  },
+  "logging": {
+    "level": "info",
+    "file": "logs/finops.log"
+  },
+  "features": {
+    "enableCostTrendAnalysis": true,
+    "enableResourceOptimization": true,
+    "enableAnomalyDetection": true
+  }
+}

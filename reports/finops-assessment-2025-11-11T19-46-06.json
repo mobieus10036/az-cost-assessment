@@ -1,0 +1,1281 @@
+{
+  "generatedAt": "2025-11-11T19:46:06.358Z",
+  "costAnalysis": {
+    "id": "analysis-1762890362892",
+    "subscriptionId": "f007d6d5-becd-4305-8649-2e4b77b66f08",
+    "scope": "/subscriptions/f007d6d5-becd-4305-8649-2e4b77b66f08",
+    "analysisDate": "2025-11-11T19:46:02.889Z",
+    "historical": {
+      "startDate": "2025-08-13T18:46:02.889Z",
+      "endDate": "2025-11-11T19:46:02.889Z",
+      "totalCost": 11373.595092197105,
+      "currency": "USD",
+      "dailyCosts": [
+        {
+          "date": "2025-08-13",
+          "cost": 125.76705804762256,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-14",
+          "cost": 147.59749191982132,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-15",
+          "cost": 102.49485067558236,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-16",
+          "cost": 115.26116545642898,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-17",
+          "cost": 106.28267160644862,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-18",
+          "cost": 119.9491264336987,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-19",
+          "cost": 124.57785149744315,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-20",
+          "cost": 149.5168977988052,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-21",
+          "cost": 135.76402792937463,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-22",
+          "cost": 136.1112531851124,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-23",
+          "cost": 148.01468239555493,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-24",
+          "cost": 116.19941070154685,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-25",
+          "cost": 145.79167546047913,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-26",
+          "cost": 114.84491202328869,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-27",
+          "cost": 121.37691851302242,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-28",
+          "cost": 145.8022522728581,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-29",
+          "cost": 136.94360989213254,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-30",
+          "cost": 116.83330539460573,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-08-31",
+          "cost": 111.57742031644426,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-01",
+          "cost": 146.55216641712488,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-02",
+          "cost": 102.0208768378089,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-03",
+          "cost": 147.29633978933185,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-04",
+          "cost": 114.28052600069483,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-05",
+          "cost": 124.1157636116303,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-06",
+          "cost": 145.7991709955637,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-07",
+          "cost": 124.6260281435281,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-08",
+          "cost": 133.20624377633274,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-09",
+          "cost": 140.92872751932273,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-10",
+          "cost": 103.63200551534935,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-11",
+          "cost": 122.32779081164516,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-12",
+          "cost": 129.91670951939093,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-13",
+          "cost": 125.17989528338725,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-14",
+          "cost": 116.56775057963581,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-15",
+          "cost": 139.16818566381454,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-16",
+          "cost": 130.1792742420683,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-17",
+          "cost": 116.15416409292047,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-18",
+          "cost": 118.78436599185325,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-19",
+          "cost": 101.513589666081,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-20",
+          "cost": 129.9679338696752,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-21",
+          "cost": 119.44433444570319,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-22",
+          "cost": 128.04699813643677,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-23",
+          "cost": 100.54838021400303,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-24",
+          "cost": 107.16276564591027,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-25",
+          "cost": 111.71366045272305,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-26",
+          "cost": 103.06673089277002,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-27",
+          "cost": 103.99183109937073,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-28",
+          "cost": 148.68506720595045,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-29",
+          "cost": 129.85334074887538,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-09-30",
+          "cost": 119.53643573468744,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-01",
+          "cost": 135.91992434149702,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-02",
+          "cost": 102.85327950164563,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-03",
+          "cost": 113.3497177894975,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-04",
+          "cost": 116.5983147506264,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-05",
+          "cost": 137.86024342936332,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-06",
+          "cost": 132.26283304505392,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-07",
+          "cost": 136.0463789774372,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-08",
+          "cost": 132.2150154346603,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-09",
+          "cost": 103.23926836532591,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-10",
+          "cost": 127.65322462518155,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-11",
+          "cost": 100.68411600082283,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-12",
+          "cost": 132.42542836977765,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-13",
+          "cost": 137.99345137109188,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-14",
+          "cost": 107.14649707272855,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-15",
+          "cost": 137.60054201288307,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-16",
+          "cost": 120.63208068062193,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-17",
+          "cost": 133.91929869343824,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-18",
+          "cost": 121.70508306385202,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-19",
+          "cost": 135.85311447049864,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-20",
+          "cost": 110.67054826001768,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-21",
+          "cost": 147.48036531184823,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-22",
+          "cost": 139.17123706101356,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-23",
+          "cost": 119.92529848535644,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-24",
+          "cost": 104.5444710600501,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-25",
+          "cost": 126.73794016347436,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-26",
+          "cost": 118.7147244913806,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-27",
+          "cost": 145.34441379633432,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-28",
+          "cost": 114.81728544795394,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-29",
+          "cost": 129.50798396200227,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-30",
+          "cost": 125.2924285296897,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-10-31",
+          "cost": 101.79656816992305,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-01",
+          "cost": 124.30674406337775,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-02",
+          "cost": 145.18622500144085,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-03",
+          "cost": 118.40189558268965,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-04",
+          "cost": 136.74730670836226,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-05",
+          "cost": 148.49818410268034,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-06",
+          "cost": 105.69944589557511,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-07",
+          "cost": 139.61091152589532,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-08",
+          "cost": 140.66325444318832,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-09",
+          "cost": 106.45545860622484,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-10",
+          "cost": 129.45845369075363,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-11",
+          "cost": 123.63250141800425,
+          "currency": "USD"
+        }
+      ],
+      "monthlyCosts": [],
+      "costByResource": [],
+      "costByService": [],
+      "costByResourceGroup": []
+    },
+    "current": {
+      "billingPeriodStart": "2025-11-01T04:00:00.000Z",
+      "billingPeriodEnd": "2025-12-01T04:59:59.999Z",
+      "currentDate": "2025-11-11T19:46:02.891Z",
+      "monthToDateCost": 1394.610296774951,
+      "estimatedMonthEndCost": 3930.265381820316,
+      "currency": "USD",
+      "dailyCosts": [
+        {
+          "date": "2025-11-01",
+          "cost": 145.98912013124885,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-02",
+          "cost": 121.26159666395237,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-03",
+          "cost": 135.5162393879,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-04",
+          "cost": 100.6662181205181,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-05",
+          "cost": 147.1505777873567,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-06",
+          "cost": 105.29818481592052,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-07",
+          "cost": 110.17907183457103,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-08",
+          "cost": 144.83456487506544,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-09",
+          "cost": 125.88544090036693,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-10",
+          "cost": 110.18398602331743,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-11",
+          "cost": 147.6452962347334,
+          "currency": "USD"
+        }
+      ],
+      "topCostResources": [],
+      "topCostServices": [],
+      "comparisonToPreviousMonth": {
+        "previousMonthTotal": 3952.5457221247457,
+        "changeAmount": -2557.935425349795,
+        "changePercent": -64.71615017712537
+      }
+    },
+    "forecasted": {
+      "forecastStartDate": "2025-11-12T19:46:02.891Z",
+      "forecastEndDate": "2025-12-12T19:46:02.891Z",
+      "totalForecastedCost": 3816.0552237445163,
+      "currency": "USD",
+      "dailyForecasts": [
+        {
+          "date": "2025-11-12T19:46:02.891Z",
+          "predictedCost": 131.78751953656453,
+          "confidenceLower": 118.60876758290809,
+          "confidenceUpper": 144.966271490221,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-13T19:46:02.891Z",
+          "predictedCost": 129.80102654088236,
+          "confidenceLower": 116.82092388679413,
+          "confidenceUpper": 142.78112919497062,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-14T19:46:02.891Z",
+          "predictedCost": 131.61355700043597,
+          "confidenceLower": 118.45220130039237,
+          "confidenceUpper": 144.77491270047958,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-15T19:46:02.891Z",
+          "predictedCost": 121.27545618281897,
+          "confidenceLower": 109.14791056453707,
+          "confidenceUpper": 133.40300180110088,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-16T19:46:02.891Z",
+          "predictedCost": 127.67536794265872,
+          "confidenceLower": 114.90783114839286,
+          "confidenceUpper": 140.44290473692462,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-17T19:46:02.891Z",
+          "predictedCost": 122.41651707760414,
+          "confidenceLower": 110.17486536984373,
+          "confidenceUpper": 134.65816878536455,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-18T19:46:02.891Z",
+          "predictedCost": 125.66401028896637,
+          "confidenceLower": 113.09760926006973,
+          "confidenceUpper": 138.230411317863,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-19T19:46:02.891Z",
+          "predictedCost": 126.79248159195372,
+          "confidenceLower": 114.11323343275835,
+          "confidenceUpper": 139.4717297511491,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-20T19:46:02.891Z",
+          "predictedCost": 131.5666770262797,
+          "confidenceLower": 118.41000932365174,
+          "confidenceUpper": 144.72334472890768,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-21T19:46:02.891Z",
+          "predictedCost": 123.99588830837617,
+          "confidenceLower": 111.59629947753855,
+          "confidenceUpper": 136.3954771392138,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-22T19:46:02.891Z",
+          "predictedCost": 125.98233248384133,
+          "confidenceLower": 113.3840992354572,
+          "confidenceUpper": 138.58056573222547,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-23T19:46:02.891Z",
+          "predictedCost": 123.59289218929246,
+          "confidenceLower": 111.23360297036321,
+          "confidenceUpper": 135.95218140822172,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-24T19:46:02.891Z",
+          "predictedCost": 129.6819197812326,
+          "confidenceLower": 116.71372780310935,
+          "confidenceUpper": 142.6501117593559,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-25T19:46:02.891Z",
+          "predictedCost": 130.84422472918305,
+          "confidenceLower": 117.75980225626475,
+          "confidenceUpper": 143.92864720210136,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-26T19:46:02.891Z",
+          "predictedCost": 125.31090176210999,
+          "confidenceLower": 112.779811585899,
+          "confidenceUpper": 137.841991938321,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-27T19:46:02.891Z",
+          "predictedCost": 127.4381993647159,
+          "confidenceLower": 114.69437942824432,
+          "confidenceUpper": 140.1820193011875,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-28T19:46:02.891Z",
+          "predictedCost": 123.74214049698877,
+          "confidenceLower": 111.36792644728989,
+          "confidenceUpper": 136.11635454668766,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-29T19:46:02.891Z",
+          "predictedCost": 132.9663637668069,
+          "confidenceLower": 119.66972739012621,
+          "confidenceUpper": 146.2630001434876,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-11-30T19:46:02.891Z",
+          "predictedCost": 126.56173241710653,
+          "confidenceLower": 113.90555917539588,
+          "confidenceUpper": 139.2179056588172,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-12-01T19:46:02.891Z",
+          "predictedCost": 127.77251462769966,
+          "confidenceLower": 114.9952631649297,
+          "confidenceUpper": 140.54976609046963,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-12-02T19:46:02.891Z",
+          "predictedCost": 132.090236813874,
+          "confidenceLower": 118.8812131324866,
+          "confidenceUpper": 145.2992604952614,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-12-03T19:46:02.891Z",
+          "predictedCost": 125.00036349523249,
+          "confidenceLower": 112.50032714570925,
+          "confidenceUpper": 137.50039984475575,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-12-04T19:46:02.891Z",
+          "predictedCost": 120.72169657820778,
+          "confidenceLower": 108.649526920387,
+          "confidenceUpper": 132.79386623602858,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-12-05T19:46:02.891Z",
+          "predictedCost": 131.19109481025933,
+          "confidenceLower": 118.0719853292334,
+          "confidenceUpper": 144.3102042912853,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-12-06T19:46:02.891Z",
+          "predictedCost": 123.93729364246411,
+          "confidenceLower": 111.5435642782177,
+          "confidenceUpper": 136.33102300671052,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-12-07T19:46:02.891Z",
+          "predictedCost": 131.39777710064672,
+          "confidenceLower": 118.25799939058206,
+          "confidenceUpper": 144.5375548107114,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-12-08T19:46:02.891Z",
+          "predictedCost": 121.19502901873399,
+          "confidenceLower": 109.07552611686059,
+          "confidenceUpper": 133.3145319206074,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-12-09T19:46:02.891Z",
+          "predictedCost": 130.09521162321784,
+          "confidenceLower": 117.08569046089606,
+          "confidenceUpper": 143.10473278553962,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-12-10T19:46:02.891Z",
+          "predictedCost": 123.71747579483726,
+          "confidenceLower": 111.34572821535353,
+          "confidenceUpper": 136.089223374321,
+          "currency": "USD"
+        },
+        {
+          "date": "2025-12-11T19:46:02.891Z",
+          "predictedCost": 130.22732175152393,
+          "confidenceLower": 117.20458957637155,
+          "confidenceUpper": 143.25005392667634,
+          "currency": "USD"
+        }
+      ],
+      "monthlyForecasts": [],
+      "forecastMethod": "linear-projection",
+      "confidenceLevel": 0.9,
+      "assumptions": [
+        "Based on 30-day historical average",
+        "Assumes similar usage patterns",
+        "Does not account for planned changes or seasonality"
+      ]
+    },
+    "trends": [
+      {
+        "period": "daily",
+        "direction": "stable",
+        "changePercent": -1.6972303103488655,
+        "changeAmount": -2.1345566296183023,
+        "dataPoints": [
+          {
+            "date": "2025-08-13",
+            "cost": 125.76705804762256,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-14",
+            "cost": 147.59749191982132,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-15",
+            "cost": 102.49485067558236,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-16",
+            "cost": 115.26116545642898,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-17",
+            "cost": 106.28267160644862,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-18",
+            "cost": 119.9491264336987,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-19",
+            "cost": 124.57785149744315,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-20",
+            "cost": 149.5168977988052,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-21",
+            "cost": 135.76402792937463,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-22",
+            "cost": 136.1112531851124,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-23",
+            "cost": 148.01468239555493,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-24",
+            "cost": 116.19941070154685,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-25",
+            "cost": 145.79167546047913,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-26",
+            "cost": 114.84491202328869,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-27",
+            "cost": 121.37691851302242,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-28",
+            "cost": 145.8022522728581,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-29",
+            "cost": 136.94360989213254,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-30",
+            "cost": 116.83330539460573,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-08-31",
+            "cost": 111.57742031644426,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-01",
+            "cost": 146.55216641712488,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-02",
+            "cost": 102.0208768378089,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-03",
+            "cost": 147.29633978933185,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-04",
+            "cost": 114.28052600069483,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-05",
+            "cost": 124.1157636116303,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-06",
+            "cost": 145.7991709955637,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-07",
+            "cost": 124.6260281435281,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-08",
+            "cost": 133.20624377633274,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-09",
+            "cost": 140.92872751932273,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-10",
+            "cost": 103.63200551534935,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-11",
+            "cost": 122.32779081164516,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-12",
+            "cost": 129.91670951939093,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-13",
+            "cost": 125.17989528338725,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-14",
+            "cost": 116.56775057963581,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-15",
+            "cost": 139.16818566381454,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-16",
+            "cost": 130.1792742420683,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-17",
+            "cost": 116.15416409292047,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-18",
+            "cost": 118.78436599185325,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-19",
+            "cost": 101.513589666081,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-20",
+            "cost": 129.9679338696752,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-21",
+            "cost": 119.44433444570319,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-22",
+            "cost": 128.04699813643677,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-23",
+            "cost": 100.54838021400303,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-24",
+            "cost": 107.16276564591027,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-25",
+            "cost": 111.71366045272305,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-26",
+            "cost": 103.06673089277002,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-27",
+            "cost": 103.99183109937073,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-28",
+            "cost": 148.68506720595045,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-29",
+            "cost": 129.85334074887538,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-09-30",
+            "cost": 119.53643573468744,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-01",
+            "cost": 135.91992434149702,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-02",
+            "cost": 102.85327950164563,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-03",
+            "cost": 113.3497177894975,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-04",
+            "cost": 116.5983147506264,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-05",
+            "cost": 137.86024342936332,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-06",
+            "cost": 132.26283304505392,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-07",
+            "cost": 136.0463789774372,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-08",
+            "cost": 132.2150154346603,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-09",
+            "cost": 103.23926836532591,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-10",
+            "cost": 127.65322462518155,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-11",
+            "cost": 100.68411600082283,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-12",
+            "cost": 132.42542836977765,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-13",
+            "cost": 137.99345137109188,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-14",
+            "cost": 107.14649707272855,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-15",
+            "cost": 137.60054201288307,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-16",
+            "cost": 120.63208068062193,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-17",
+            "cost": 133.91929869343824,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-18",
+            "cost": 121.70508306385202,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-19",
+            "cost": 135.85311447049864,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-20",
+            "cost": 110.67054826001768,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-21",
+            "cost": 147.48036531184823,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-22",
+            "cost": 139.17123706101356,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-23",
+            "cost": 119.92529848535644,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-24",
+            "cost": 104.5444710600501,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-25",
+            "cost": 126.73794016347436,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-26",
+            "cost": 118.7147244913806,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-27",
+            "cost": 145.34441379633432,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-28",
+            "cost": 114.81728544795394,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-29",
+            "cost": 129.50798396200227,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-30",
+            "cost": 125.2924285296897,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-10-31",
+            "cost": 101.79656816992305,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-11-01",
+            "cost": 124.30674406337775,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-11-02",
+            "cost": 145.18622500144085,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-11-03",
+            "cost": 118.40189558268965,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-11-04",
+            "cost": 136.74730670836226,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-11-05",
+            "cost": 148.49818410268034,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-11-06",
+            "cost": 105.69944589557511,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-11-07",
+            "cost": 139.61091152589532,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-11-08",
+            "cost": 140.66325444318832,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-11-09",
+            "cost": 106.45545860622484,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-11-10",
+            "cost": 129.45845369075363,
+            "currency": "USD"
+          },
+          {
+            "date": "2025-11-11",
+            "cost": 123.63250141800425,
+            "currency": "USD"
+          }
+        ]
+      }
+    ],
+    "anomalies": [],
+    "summary": {
+      "totalHistoricalCost": 11373.595092197105,
+      "currentMonthToDate": 1394.610296774951,
+      "forecastedMonthEnd": 3930.265381820316,
+      "forecastedNextMonth": 3816.0552237445163,
+      "currency": "USD",
+      "avgDailySpend": 125.1784842056084,
+      "peakDailySpend": 149.5168977988052,
+      "lowestDailySpend": 100.54838021400303
+    }
+  },
+  "resourceSummary": {
+    "totalResources": 1,
+    "totalMonthlyCost": 0,
+    "currency": "USD",
+    "byType": {
+      "Microsoft.Storage/storageAccounts": {
+        "count": 1,
+        "cost": 0
+      }
+    },
+    "byResourceGroup": {
+      "finops-rg": {
+        "count": 1,
+        "cost": 0
+      }
+    },
+    "byLocation": {
+      "eastus2": {
+        "count": 1,
+        "cost": 0
+      }
+    },
+    "utilizationSummary": {
+      "optimized": 0,
+      "underutilized": 0,
+      "overutilized": 0,
+      "avgUtilizationScore": 0
+    },
+    "unusedResources": 0,
+    "resourcesWithRecommendations": 0
+  }
+}

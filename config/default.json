@@ -1,0 +1,31 @@
+{
+  "azure": {
+    "subscriptionId": "bfa1c037-e5d1-4026-af79-1cde85bb29d7",
+    "tenantId": "25cfe2b5-4780-4220-babb-8b90f37b2c53",
+    "scope": "/subscriptions/bfa1c037-e5d1-4026-af79-1cde85bb29d7"
+  },
+  "storage": {
+    "accountName": "deveus2stgcore",
+    "subscriptionId": "f007d6d5-becd-4305-8649-2e4b77b66f08",
+    "containerName": "finops-reports",
+    "tableName": "FinOpsCostData",
+    "useStorage": true
+  },
+  "analysis": {
+    "historicalDays": 90,
+    "forecastDays": 30,
+    "anomalyThresholdPercent": 20,
+    "costTrendAnalysis": {
+      "timeFrame": "monthly",
+      "thresholdPercent": 10
+    },
+    "resourceOptimization": {
+      "underutilizationThresholdPercent": 20,
+      "oversizedThresholdPercent": 50
+    }
+  },
+  "logging": {
+    "level": "info",
+    "logFile": "logs/app.log"
+  }
+}
