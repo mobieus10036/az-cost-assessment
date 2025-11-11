@@ -355,8 +355,28 @@ export class AzureCostManagementService {
                     const currency = currencyIndex >= 0 ? row[currencyIndex] : 'USD';
                     
                     totalCost += cost;
+                    
+                    // Parse the date correctly - Azure returns it in YYYYMMDD format as a number
+                    let dateString: string;
+                    if (typeof date === 'number') {
+                        // Convert YYYYMMDD number to Date object
+                        const dateStr = date.toString();
+                        const year = parseInt(dateStr.substring(0, 4));
+                        const month = parseInt(dateStr.substring(4, 6)) - 1; // JS months are 0-indexed
+                        const day = parseInt(dateStr.substring(6, 8));
+                        dateString = new Date(year, month, day).toISOString();
+                    } else if (typeof date === 'string' && date.length === 8) {
+                        // Handle string format YYYYMMDD
+                        const year = parseInt(date.substring(0, 4));
+                        const month = parseInt(date.substring(4, 6)) - 1;
+                        const day = parseInt(date.substring(6, 8));
+                        dateString = new Date(year, month, day).toISOString();
+                    } else {
+                        dateString = date;
+                    }
+                    
                     dailyCosts.push({
-                        date: typeof date === 'number' ? format(new Date(date), 'yyyy-MM-dd') : date,
+                        date: dateString,
                         cost,
                         currency
                     });
