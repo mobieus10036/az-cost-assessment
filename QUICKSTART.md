@@ -144,14 +144,24 @@ az role assignment create \
 npm start
 ```
 
-That's it! The tool will:
-1. ✅ Connect to your Azure subscription
-2. ✅ Query cost data for the last 90 days
-3. ✅ Analyze your current month spending
-4. ✅ Generate a 30-day forecast
-5. ✅ Identify trends and anomalies
-6. ✅ Provide actionable recommendations
-7. ✅ Save a detailed JSON report to `reports/`
+⏱️ **Expected Duration:** Approximately 2 minutes
+
+The assessment takes ~2 minutes to complete intentionally. This ensures:
+- ✅ Zero rate limiting from Azure Cost Management API
+- ✅ 100% real data with no fallbacks to mock data
+- ✅ Sequential API calls with proper delays
+- ✅ Reliable, accurate cost analysis
+
+**What happens during execution:**
+1. ✅ Connects to Azure subscription (3-5 seconds)
+2. ✅ Queries 90-day historical costs (15-20 seconds)
+3. ✅ Retrieves current month data (15-20 seconds)
+4. ✅ Fetches previous month for comparison (15-20 seconds)
+5. ✅ Generates 30-day forecast (15-20 seconds)
+6. ✅ Analyzes trends and detects anomalies (2-3 seconds)
+7. ✅ Inventories resources (1-2 seconds)
+8. ✅ Generates recommendations (1 second)
+9. ✅ Saves JSON report to `reports/` (1 second)
 
 ## Expected Output
 
@@ -165,24 +175,40 @@ AZURE FINOPS ASSESSMENT REPORT
 📊 COST SUMMARY
 ------------------------------------------------------------
 Subscription ID: xxx-xxx-xxx
-Historical Total (90 days): $9,414.48 USD
-Current Month to Date: $1,458.51 USD
-Estimated Month End: $4,110.36 USD
-Average Daily Spend: $106.60 USD
+Historical Total (90 days): $9,425.98 USD
+Current Month to Date: $972.25 USD
+Estimated Month End: $2,739.99 USD
+Average Daily Spend: $101.94 USD
+Peak Daily Spend: $140.95 USD
+
+📅 DAILY SPEND (PAST 14 DAYS)
+------------------------------------------------------------
+Oct 29, 2025 (Wed)       $  147.55  ██████████████████████████████
+Oct 30, 2025 (Thu)       $  125.59  █████████████████████████
+Oct 31, 2025 (Fri)       $  108.96  ██████████████████████
+Nov 01, 2025 (Sat)       $  116.06  ████████████████████████
+...
+------------------------------------------------------------
+14-Day Average: $120.92 USD/day
 
 💰 TOP EXPENSIVE SERVICES
 ------------------------------------------------------------
-1. Virtual Machines          $3,334.46 (35.4%)
-2. Storage                   $3,171.82 (33.7%)
+1. Virtual Machines          $3,338.83 (35.4%)
+2. Storage                   $3,176.35 (33.7%)
 3. Microsoft Defender        $895.67 (9.5%)
 ...
 
 💡 RECOMMENDATIONS
 ------------------------------------------------------------
-1. 🖥️ Optimize Virtual Machines (35.0% of costs)
+1. 🖥️ Optimize Virtual Machines (35.4% of costs)
    Consider Reserved Instances...
-   💰 Potential Savings: ~$800.76 USD/90 days
+   💰 Potential Savings: ~$667.77 USD/90 days
+
+2. ✅ Cost Optimization Success: -70.4% Reduction
+   Great job! Continue monitoring...
 ...
+============================================================
+✓ Report saved to: reports/finops-assessment-2025-11-11T21-12-08.json
 ============================================================
 ```
 

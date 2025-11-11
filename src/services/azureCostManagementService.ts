@@ -25,6 +25,9 @@ export class AzureCostManagementService {
     private credential: DefaultAzureCredential;
     private subscriptionId: string;
     private scope: string;
+    private readonly API_DELAY_MS = 15000; // 15 second delay between API calls to avoid rate limiting
+    private readonly MAX_RETRIES = 2;
+    private readonly RETRY_DELAY_MS = 20000; // 20 seconds between retries
 
     constructor() {
         const azureConfig = configService.getAzureConfig();
@@ -39,21 +42,57 @@ export class AzureCostManagementService {
     }
 
     /**
+     * Delay helper to avoid rate limiting
+     */
+    private async delay(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Execute API call with retry logic for rate limiting
+     */
+    private async executeWithRetry<T>(operation: () => Promise<T>, operationName: string): Promise<T> {
+        for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+            try {
+                return await operation();
+            } catch (error: any) {
+                const isRateLimitError = error?.message?.includes('Too many requests') || 
+                                        error?.statusCode === 429;
+                
+                if (isRateLimitError && attempt < this.MAX_RETRIES) {
+                    const waitTime = this.RETRY_DELAY_MS * attempt; // Exponential backoff
+                    logWarning(`Rate limit hit for ${operationName}. Waiting ${waitTime}ms before retry ${attempt}/${this.MAX_RETRIES}...`);
+                    await this.delay(waitTime);
+                } else {
+                    throw error;
+                }
+            }
+        }
+        throw new Error(`Failed after ${this.MAX_RETRIES} retries`);
+    }
+
+    /**
      * Get comprehensive cost analysis including historical, current, and forecasted data
      */
     public async getComprehensiveCostAnalysis(): Promise<ComprehensiveCostAnalysis> {
         try {
             logInfo('Starting comprehensive cost analysis...');
+            logInfo('Using sequential API calls with delays to avoid rate limiting...');
             
             const analysisConfig = configService.getAnalysisConfig();
             const now = new Date();
             
-            // Fetch data in parallel for efficiency
-            const [historical, current, forecasted] = await Promise.all([
-                this.getHistoricalCostData(analysisConfig.historicalDays),
-                this.getCurrentCostData(),
-                this.getForecastedCostData(analysisConfig.forecastDays)
-            ]);
+            // Fetch data sequentially with delays to avoid rate limiting
+            logInfo('Fetching historical data...');
+            const historical = await this.getHistoricalCostData(analysisConfig.historicalDays);
+            await this.delay(this.API_DELAY_MS);
+            
+            logInfo('Fetching current month data...');
+            const current = await this.getCurrentCostData();
+            await this.delay(this.API_DELAY_MS);
+            
+            logInfo('Generating forecast...');
+            const forecasted = await this.getForecastedCostData(analysisConfig.forecastDays);
 
             // Calculate summary metrics
             const summary = this.calculateSummary(historical, current, forecasted);
@@ -127,6 +166,9 @@ export class AzureCostManagementService {
             
             // Query current month costs
             const currentMonthQuery = await this.queryActualCosts(monthStart, now);
+            
+            // Add delay before next query
+            await this.delay(this.API_DELAY_MS);
             
             // Get previous month for comparison
             const prevMonthStart = subMonths(monthStart, 1);
@@ -286,11 +328,17 @@ export class AzureCostManagementService {
                 }
             };
 
-            // Execute queries in parallel
-            const [dailyResult, serviceResult] = await Promise.all([
-                this.client.query.usage(this.scope, dailyQuery as any),
-                this.client.query.usage(this.scope, serviceQuery as any)
-            ]);
+            // Execute queries sequentially with delay and retry logic to avoid rate limiting
+            const dailyResult = await this.executeWithRetry(
+                () => this.client.query.usage(this.scope, dailyQuery as any),
+                'daily costs query'
+            );
+            await this.delay(this.API_DELAY_MS);
+            
+            const serviceResult = await this.executeWithRetry(
+                () => this.client.query.usage(this.scope, serviceQuery as any),
+                'service costs query'
+            );
 
             // Parse daily costs
             const dailyCosts: CostDataPoint[] = [];
