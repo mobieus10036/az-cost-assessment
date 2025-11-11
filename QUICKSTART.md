@@ -1,52 +1,189 @@
-# Quick Start Guide - Azure FinOps Assessment PoC
+# Quick Start Guide - Azure FinOps Assessment
+
+Get your FinOps assessment running in 5 minutes!
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- ✅ **Node.js 16+** installed ([download](https://nodejs.org/))
+- ✅ **Azure CLI** installed ([install guide](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli))
+- ✅ **Azure subscription** with active resources
+- ✅ **Permissions**: Cost Management Reader (or Owner/Contributor) role
 
 ## Installation Steps
 
-Follow these steps to get your FinOps assessment running:
+### 1. Clone the Repository
 
-### 1. Install Dependencies
+```bash
+git clone https://github.com/mobieus10036/AzCostAssessment.git
+cd AzCostAssessment
+```
 
-```powershell
+### 2. Install Dependencies
+
+```bash
 npm install
 ```
 
-This will install:
+This installs:
 - Azure SDKs (@azure/identity, @azure/arm-costmanagement, @azure/arm-resources)
 - Configuration libraries (config, dotenv)
 - Logging (winston)
 - Date utilities (date-fns)
 - TypeScript and development tools
 
-### 2. Set Up Azure Authentication
+### 3. Set Up Azure Authentication
 
 #### Option A: Azure CLI (Recommended for local development)
-```powershell
+
+```bash
 # Login to Azure
 az login
 
-# Set your subscription
-az account set --subscription "YOUR_SUBSCRIPTION_ID"
+# List your subscriptions
+az account list --output table
 
-# Verify
+# Set your target subscription
+az account set --subscription "your-subscription-id-or-name"
+
+# Verify it's set correctly
 az account show
 ```
 
 #### Option B: Service Principal (For automation/CI/CD)
-```powershell
-# Create service principal
-az ad sp create-for-rbac --name "finops-assessment-sp" --role "Reader" --scopes /subscriptions/YOUR_SUBSCRIPTION_ID
 
-# Copy the output and add to .env file
+```bash
+# Create service principal with Cost Management Reader role
+az ad sp create-for-rbac \
+  --name "finops-assessment-sp" \
+  --role "Cost Management Reader" \
+  --scopes /subscriptions/YOUR_SUBSCRIPTION_ID
+
+# Output will show:
+# {
+#   "appId": "xxx",
+#   "displayName": "finops-assessment-sp",
+#   "password": "xxx",
+#   "tenant": "xxx"
+# }
+
+# Add these to your .env file as:
+# AZURE_CLIENT_ID=appId
+# AZURE_CLIENT_SECRET=password
+# AZURE_TENANT_ID=tenant
 ```
 
-### 3. Configure Environment Variables
+### 4. Configure Environment Variables
 
-```powershell
+```bash
 # Copy the example file
 cp .env.example .env
 
-# Edit .env and set your values
+# Edit the file with your subscription details
+# Windows:
 notepad .env
+
+# Mac/Linux:
+nano .env
+# or
+vim .env
+```
+
+**Required variables in `.env`:**
+
+```bash
+# Your Azure Tenant ID
+AZURE_TENANT_ID=your-tenant-id-here
+
+# Subscription to analyze costs FROM (usually your production subscription)
+AZURE_SUBSCRIPTION_ID=your-subscription-id-here
+
+# Optional: Storage account for report persistence (in any subscription)
+AZURE_STORAGE_ACCOUNT_NAME=yourstorageaccount
+AZURE_STORAGE_SUBSCRIPTION_ID=storage-subscription-id-here
+```
+
+**Quick tips to get these values:**
+
+```bash
+# Get your tenant ID
+az account show --query tenantId -o tsv
+
+# Get your subscription ID
+az account show --query id -o tsv
+
+# Get subscription name
+az account show --query name -o tsv
+```
+
+### 5. Verify Cost Management Permissions
+
+```bash
+# Check if you have the required permissions
+az role assignment list \
+  --assignee $(az account show --query user.name -o tsv) \
+  --subscription $(az account show --query id -o tsv) \
+  --query "[?contains(roleDefinitionName, 'Cost') || contains(roleDefinitionName, 'Owner') || contains(roleDefinitionName, 'Contributor')].{Role:roleDefinitionName, Scope:scope}" \
+  --output table
+```
+
+**If you don't have Cost Management Reader role:**
+
+```bash
+# Request the role (requires Owner or User Access Administrator permissions)
+az role assignment create \
+  --assignee your-email@domain.com \
+  --role "Cost Management Reader" \
+  --scope "/subscriptions/your-subscription-id"
+```
+
+### 6. Run Your First Assessment
+
+```bash
+npm start
+```
+
+That's it! The tool will:
+1. ✅ Connect to your Azure subscription
+2. ✅ Query cost data for the last 90 days
+3. ✅ Analyze your current month spending
+4. ✅ Generate a 30-day forecast
+5. ✅ Identify trends and anomalies
+6. ✅ Provide actionable recommendations
+7. ✅ Save a detailed JSON report to `reports/`
+
+## Expected Output
+
+You'll see a comprehensive report like this:
+
+```
+============================================================
+AZURE FINOPS ASSESSMENT REPORT
+============================================================
+
+📊 COST SUMMARY
+------------------------------------------------------------
+Subscription ID: xxx-xxx-xxx
+Historical Total (90 days): $9,414.48 USD
+Current Month to Date: $1,458.51 USD
+Estimated Month End: $4,110.36 USD
+Average Daily Spend: $106.60 USD
+
+💰 TOP EXPENSIVE SERVICES
+------------------------------------------------------------
+1. Virtual Machines          $3,334.46 (35.4%)
+2. Storage                   $3,171.82 (33.7%)
+3. Microsoft Defender        $895.67 (9.5%)
+...
+
+💡 RECOMMENDATIONS
+------------------------------------------------------------
+1. 🖥️ Optimize Virtual Machines (35.0% of costs)
+   Consider Reserved Instances...
+   💰 Potential Savings: ~$800.76 USD/90 days
+...
+============================================================
 ```
 
 Required variables:

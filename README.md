@@ -2,18 +2,17 @@
 
 A comprehensive proof of concept (PoC) for analyzing Azure services and their associated costs. This tool provides Azure engineers with programmatic insights into spending patterns, cost trends, forecasts, and optimization opportunities.
 
-> ⚠️ **IMPORTANT NOTE**: This PoC currently uses **mock/demonstration data** for cost analysis. The services shown (Virtual Machines, Kubernetes, SQL Database, etc.) are sample data to demonstrate reporting capabilities. See [IMPLEMENTATION.md](./IMPLEMENTATION.md) for how to implement real Azure Cost Management API integration to get your actual subscription costs.
-
-## 🎯 What This PoC Delivers
+## 🎯 What This Tool Delivers
 
 This application analyzes your Azure subscription and provides:
 
-- **📊 Historical Cost Analysis**: Review past spending patterns (configurable days)
+- **📊 Historical Cost Analysis**: Review past spending patterns (90 days default)
 - **💰 Current Month Tracking**: Real-time month-to-date costs and estimates
 - **🔮 Cost Forecasting**: Predict future spending based on historical trends
 - **📈 Trend Analysis**: Identify increasing, decreasing, or stable cost patterns
 - **⚠️ Anomaly Detection**: Spot unusual cost spikes or drops automatically
-- **💻 Resource Inventory**: Complete view of all Azure resources and their costs
+- **💻 Resource Inventory**: Complete view of all Azure resources
+- **💡 Actionable Recommendations**: Smart cost optimization suggestions
 - **📄 JSON Reports**: Export detailed assessments for further analysis
 
 ## 🏗️ Architecture
@@ -65,15 +64,17 @@ azure-finops-assessment-poc/
 
 ### Prerequisites
 
-1. **Node.js**: Version 16 or higher
-2. **Azure Subscription**: With appropriate permissions
-3. **Azure CLI**: For authentication (or use Service Principal)
+1. **Node.js**: Version 16 or higher ([Download](https://nodejs.org/))
+2. **Azure Subscription**: With active resources
+3. **Azure CLI**: For authentication ([Install](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli))
+4. **Permissions**: Cost Management Reader role (or Owner/Contributor) on the subscription
 
 ### Installation
 
-1. **Clone and navigate to the project**:
+1. **Clone the repository**:
    ```bash
-   cd azure-finops-assessment-poc
+   git clone https://github.com/mobieus10036/AzCostAssessment.git
+   cd AzCostAssessment
    ```
 
 2. **Install dependencies**:
@@ -86,16 +87,32 @@ azure-finops-assessment-poc/
    cp .env.example .env
    ```
    
-   Edit `.env` and set:
+   Edit `.env` and set your subscription details:
    ```bash
    AZURE_SUBSCRIPTION_ID=your-subscription-id-here
    AZURE_TENANT_ID=your-tenant-id-here
    ```
+   
+   > **Tip**: Get your subscription ID with `az account show --query id -o tsv`
 
 4. **Authenticate with Azure**:
    ```bash
    az login
    az account set --subscription "your-subscription-id"
+   ```
+
+5. **Verify Cost Management permissions**:
+   ```bash
+   # Check if you have Cost Management Reader role
+   az role assignment list --assignee $(az account show --query user.name -o tsv) --query "[?contains(roleDefinitionName, 'Cost') || contains(roleDefinitionName, 'Owner') || contains(roleDefinitionName, 'Contributor')].roleDefinitionName"
+   ```
+   
+   If you don't have Cost Management Reader, request it:
+   ```bash
+   az role assignment create \
+     --assignee your-email@domain.com \
+     --role "Cost Management Reader" \
+     --scope "/subscriptions/your-subscription-id"
    ```
 
 ### Running the Assessment
