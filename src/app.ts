@@ -11,6 +11,7 @@ import { CostTrendAnalyzer } from './analyzers/costTrendAnalyzer';
 import { AnomalyDetector } from './analyzers/anomalyDetector';
 import { logInfo, logError } from './utils/logger';
 import { configService } from './utils/config';
+import { format } from 'date-fns';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -107,6 +108,35 @@ class FinOpsAssessmentApp {
         console.log('');
         console.log(`Average Daily Spend: ${costAnalysis.summary.avgDailySpend.toFixed(2)} ${costAnalysis.summary.currency}`);
         console.log(`Peak Daily Spend:    ${costAnalysis.summary.peakDailySpend.toFixed(2)} ${costAnalysis.summary.currency}`);
+
+        // Daily Spend for Past 14 Days
+        console.log('\n📅 DAILY SPEND (PAST 14 DAYS)');
+        console.log('-'.repeat(60));
+        
+        if (costAnalysis.historical.dailyCosts && costAnalysis.historical.dailyCosts.length > 0) {
+            // Get the last 14 days of daily costs
+            const recentDailyCosts = costAnalysis.historical.dailyCosts.slice(-14);
+            const maxDailyCost = Math.max(...recentDailyCosts.map((d: any) => d.cost));
+            
+            recentDailyCosts.forEach((dayData: any) => {
+                const date = new Date(dayData.date);
+                const dateStr = format(date, 'MMM dd, yyyy (EEE)');
+                const cost = dayData.cost.toFixed(2);
+                const barLength = Math.round((dayData.cost / maxDailyCost) * 30); // Max 30 chars
+                const bar = '█'.repeat(barLength);
+                const padding = ' '.repeat(Math.max(0, 25 - dateStr.length));
+                
+                console.log(`${dateStr}${padding}$${cost.padStart(8)}  ${bar}`);
+            });
+            
+            // Calculate 14-day average
+            const fourteenDayTotal = recentDailyCosts.reduce((sum: number, d: any) => sum + d.cost, 0);
+            const fourteenDayAvg = fourteenDayTotal / recentDailyCosts.length;
+            console.log('-'.repeat(60));
+            console.log(`14-Day Average: $${fourteenDayAvg.toFixed(2)} ${costAnalysis.summary.currency}/day`);
+        } else {
+            console.log('No daily cost data available');
+        }
 
         // Month-over-Month Comparison
         console.log('\n📈 MONTH-OVER-MONTH COMPARISON');
