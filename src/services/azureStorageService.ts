@@ -107,7 +107,7 @@ export class AzureStorageService {
 
         // Ensure container exists
         await this.containerClient.createIfNotExists({
-            access: 'private'
+            access: 'blob'
         });
 
         // Upload blob
