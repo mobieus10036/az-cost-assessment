@@ -10,11 +10,13 @@ import { AzureResourceService } from './services/azureResourceService';
 import { CostTrendAnalyzer } from './analyzers/costTrendAnalyzer';
 import { AnomalyDetector } from './analyzers/anomalyDetector';
 import { SmartRecommendationAnalyzer } from './analyzers/smartRecommendationAnalyzer';
+import { PDFGeneratorService } from './services/pdfGenerator';
 import { logInfo, logError } from './utils/logger';
 import { configService } from './utils/config';
 import { format } from 'date-fns';
 import * as fs from 'fs';
 import * as path from 'path';
+import { colors, getSeverityColor, getTrendColor, getChangeColor, formatCurrency, formatPercentChange } from './utils/colors';
 
 class FinOpsAssessmentApp {
     private costService: AzureCostManagementService;
@@ -22,6 +24,7 @@ class FinOpsAssessmentApp {
     private trendAnalyzer: CostTrendAnalyzer;
     private anomalyDetector: AnomalyDetector;
     private smartRecommendations: SmartRecommendationAnalyzer;
+    private pdfGenerator: PDFGeneratorService;
 
     constructor() {
         logInfo('='.repeat(60));
@@ -34,6 +37,7 @@ class FinOpsAssessmentApp {
         this.trendAnalyzer = new CostTrendAnalyzer();
         this.anomalyDetector = new AnomalyDetector();
         this.smartRecommendations = new SmartRecommendationAnalyzer();
+        this.pdfGenerator = new PDFGeneratorService();
 
         logInfo('All services initialized successfully');
     }
@@ -71,7 +75,7 @@ class FinOpsAssessmentApp {
             this.displayReport(costAnalysis, recommendationSummary);
             
             // Step 6: Save results to file
-            this.saveResults(costAnalysis, recommendations, recommendationSummary);
+            await this.saveResults(costAnalysis, recommendations, recommendationSummary);
 
             logInfo('\n' + '='.repeat(60));
             logInfo('FinOps assessment completed successfully!');
@@ -87,35 +91,35 @@ class FinOpsAssessmentApp {
      * Display assessment report to console
      */
     private displayReport(costAnalysis: any, recommendationSummary?: any): void {
-        console.log('\n' + '='.repeat(60));
-        console.log('AZURE FINOPS ASSESSMENT REPORT');
-        console.log('='.repeat(60));
+        console.log('\n' + colors.separator('='.repeat(60)));
+        console.log(colors.header('AZURE FINOPS ASSESSMENT REPORT'));
+        console.log(colors.separator('='.repeat(60)));
         
         // Summary Section
-        console.log('\nCOST SUMMARY');
-        console.log('-'.repeat(60));
-        console.log(`Subscription ID: ${costAnalysis.subscriptionId}`);
-        console.log(`Analysis Date:   ${new Date(costAnalysis.analysisDate).toLocaleString()}`);
-        console.log(`Currency:        ${costAnalysis.summary.currency}`);
+        console.log('\n' + colors.subheader('COST SUMMARY'));
+        console.log(colors.separator('-'.repeat(60)));
+        console.log(colors.label('Subscription ID: ') + colors.dim(costAnalysis.subscriptionId));
+        console.log(colors.label('Analysis Date:   ') + colors.dim(new Date(costAnalysis.analysisDate).toLocaleString()));
+        console.log(colors.label('Currency:        ') + colors.info(costAnalysis.summary.currency));
         console.log('');
-        console.log(`Historical Total (${costAnalysis.historical.startDate.split('T')[0]} to ${costAnalysis.historical.endDate.split('T')[0]}):`);
-        console.log(`  ${costAnalysis.summary.totalHistoricalCost.toFixed(2)} ${costAnalysis.summary.currency}`);
+        console.log(colors.label(`Historical Total (${costAnalysis.historical.startDate.split('T')[0]} to ${costAnalysis.historical.endDate.split('T')[0]}):`));
+        console.log(`  ${formatCurrency(costAnalysis.summary.totalHistoricalCost, costAnalysis.summary.currency)}`);
         console.log('');
-        console.log(`Current Month to Date:`);
-        console.log(`  ${costAnalysis.summary.currentMonthToDate.toFixed(2)} ${costAnalysis.summary.currency}`);
+        console.log(colors.label(`Current Month to Date:`));
+        console.log(`  ${formatCurrency(costAnalysis.summary.currentMonthToDate, costAnalysis.summary.currency)}`);
         console.log('');
-        console.log(`Estimated Month End:`);
-        console.log(`  ${costAnalysis.summary.forecastedMonthEnd.toFixed(2)} ${costAnalysis.summary.currency}`);
+        console.log(colors.label(`Estimated Month End:`));
+        console.log(`  ${formatCurrency(costAnalysis.summary.forecastedMonthEnd, costAnalysis.summary.currency)}`);
         console.log('');
-        console.log(`Forecasted Next Period:`);
-        console.log(`  ${costAnalysis.summary.forecastedNextMonth.toFixed(2)} ${costAnalysis.summary.currency}`);
+        console.log(colors.label(`Forecasted Next Period:`));
+        console.log(`  ${formatCurrency(costAnalysis.summary.forecastedNextMonth, costAnalysis.summary.currency)}`);
         console.log('');
-        console.log(`Average Daily Spend: ${costAnalysis.summary.avgDailySpend.toFixed(2)} ${costAnalysis.summary.currency}`);
-        console.log(`Peak Daily Spend:    ${costAnalysis.summary.peakDailySpend.toFixed(2)} ${costAnalysis.summary.currency}`);
+        console.log(colors.label('Average Daily Spend: ') + formatCurrency(costAnalysis.summary.avgDailySpend, costAnalysis.summary.currency));
+        console.log(colors.label('Peak Daily Spend:    ') + formatCurrency(costAnalysis.summary.peakDailySpend, costAnalysis.summary.currency));
 
         // Daily Spend for Past 14 Days
-        console.log('\nDAILY SPEND (PAST 14 DAYS)');
-        console.log('-'.repeat(60));
+        console.log('\n' + colors.subheader('DAILY SPEND (PAST 14 DAYS)'));
+        console.log(colors.separator('-'.repeat(60)));
         
         if (costAnalysis.historical.dailyCosts && costAnalysis.historical.dailyCosts.length > 0) {
             // Get the last 14 days of daily costs
@@ -127,68 +131,72 @@ class FinOpsAssessmentApp {
                 const cost = dayData.cost.toFixed(2);
                 const padding = ' '.repeat(Math.max(0, 25 - dateStr.length));
                 
-                console.log(`${dateStr}${padding}$${cost.padStart(8)}`);
+                console.log(`${colors.dim(dateStr)}${padding}${colors.value('$' + cost.padStart(8))}`);
             });
             
             // Calculate 14-day average
             const fourteenDayTotal = recentDailyCosts.reduce((sum: number, d: any) => sum + d.cost, 0);
             const fourteenDayAvg = fourteenDayTotal / recentDailyCosts.length;
-            console.log('-'.repeat(60));
-            console.log(`14-Day Average: $${fourteenDayAvg.toFixed(2)} ${costAnalysis.summary.currency}/day`);
+            console.log(colors.separator('-'.repeat(60)));
+            console.log(colors.label('14-Day Average: ') + formatCurrency(fourteenDayAvg, costAnalysis.summary.currency) + colors.label('/day'));
         } else {
-            console.log('No daily cost data available');
+            console.log(colors.dim('No daily cost data available'));
         }
 
         // Month-over-Month Comparison (3 months)
-        console.log('\nMONTHLY COST COMPARISON');
-        console.log('-'.repeat(60));
+        console.log('\n' + colors.subheader('MONTHLY COST COMPARISON'));
+        console.log(colors.separator('-'.repeat(60)));
         
         const monthlyComp = costAnalysis.current.monthlyComparison;
         
         // Show three months
-        console.log(`${monthlyComp.twoMonthsAgo.name.padEnd(20)} ${monthlyComp.twoMonthsAgo.total.toFixed(2).padStart(10)} ${costAnalysis.summary.currency}`);
-        console.log(`${monthlyComp.lastMonth.name.padEnd(20)} ${monthlyComp.lastMonth.total.toFixed(2).padStart(10)} ${costAnalysis.summary.currency}`);
-        console.log(`${monthlyComp.currentMonth.name.padEnd(20)} ${monthlyComp.currentMonth.monthToDate.toFixed(2).padStart(10)} ${costAnalysis.summary.currency} (month-to-date)`);
-        console.log(`${' '.repeat(20)} ${monthlyComp.currentMonth.projected.toFixed(2).padStart(10)} ${costAnalysis.summary.currency} (projected)`);
+        console.log(`${colors.dim(monthlyComp.twoMonthsAgo.name.padEnd(20))} ${formatCurrency(monthlyComp.twoMonthsAgo.total, costAnalysis.summary.currency)}`);
+        console.log(`${colors.dim(monthlyComp.lastMonth.name.padEnd(20))} ${formatCurrency(monthlyComp.lastMonth.total, costAnalysis.summary.currency)}`);
+        console.log(`${colors.dim(monthlyComp.currentMonth.name.padEnd(20))} ${formatCurrency(monthlyComp.currentMonth.monthToDate, costAnalysis.summary.currency)} ${colors.label('(month-to-date)')}`);
+        console.log(`${' '.repeat(20)} ${formatCurrency(monthlyComp.currentMonth.projected, costAnalysis.summary.currency)} ${colors.label('(projected)')}`);
         console.log('');
         
         // Show changes
         const historicalSymbol = monthlyComp.lastTwoMonthsChange.percent > 0 ? '^' : monthlyComp.lastTwoMonthsChange.percent < 0 ? 'v' : '-';
         const projectedSymbol = monthlyComp.projectedChange.percent > 0 ? '^' : monthlyComp.projectedChange.percent < 0 ? 'v' : '-';
         
-        console.log(`${monthlyComp.twoMonthsAgo.name} to ${monthlyComp.lastMonth.name}:`);
-        console.log(`  ${historicalSymbol} ${monthlyComp.lastTwoMonthsChange.amount > 0 ? '+' : ''}${monthlyComp.lastTwoMonthsChange.amount.toFixed(2)} ${costAnalysis.summary.currency} (${monthlyComp.lastTwoMonthsChange.percent > 0 ? '+' : ''}${monthlyComp.lastTwoMonthsChange.percent.toFixed(1)}%)`);
+        console.log(colors.label(`${monthlyComp.twoMonthsAgo.name} to ${monthlyComp.lastMonth.name}:`));
+        const historicalChange = `${historicalSymbol} ${monthlyComp.lastTwoMonthsChange.amount > 0 ? '+' : ''}${monthlyComp.lastTwoMonthsChange.amount.toFixed(2)} ${costAnalysis.summary.currency} (${formatPercentChange(monthlyComp.lastTwoMonthsChange.percent)})`;
+        console.log(`  ${getChangeColor(monthlyComp.lastTwoMonthsChange.percent)(historicalChange)}`);
         console.log('');
-        console.log(`${monthlyComp.lastMonth.name} to ${monthlyComp.currentMonth.name} (projected):`);
-        console.log(`  ${projectedSymbol} ${monthlyComp.projectedChange.amount > 0 ? '+' : ''}${monthlyComp.projectedChange.amount.toFixed(2)} ${costAnalysis.summary.currency} (${monthlyComp.projectedChange.percent > 0 ? '+' : ''}${monthlyComp.projectedChange.percent.toFixed(1)}%)`);
-
+        console.log(colors.label(`${monthlyComp.lastMonth.name} to ${monthlyComp.currentMonth.name} (projected):`));
+        const projectedChange = `${projectedSymbol} ${monthlyComp.projectedChange.amount > 0 ? '+' : ''}${monthlyComp.projectedChange.amount.toFixed(2)} ${costAnalysis.summary.currency} (${formatPercentChange(monthlyComp.projectedChange.percent)})`;
+        console.log(`  ${getChangeColor(monthlyComp.projectedChange.percent)(projectedChange)}`);
         // Trends
         if (costAnalysis.trends.length > 0) {
-            console.log('\nCOST TRENDS & PATTERNS');
-            console.log('-'.repeat(60));
+            console.log('\n' + colors.subheader('COST TRENDS & PATTERNS'));
+            console.log(colors.separator('-'.repeat(60)));
             costAnalysis.trends.forEach((trend: any) => {
                 const trendSymbol = trend.direction === 'increasing' ? '^' : trend.direction === 'decreasing' ? 'v' : '-';
-                console.log(`${trendSymbol} ${trend.period.toUpperCase()}: ${trend.direction} (${trend.changePercent > 0 ? '+' : ''}${trend.changePercent.toFixed(1)}%)`);
+                const trendColor = getTrendColor(trend.direction);
+                const trendText = `${trendSymbol} ${trend.period.toUpperCase()}: ${trend.direction} (${formatPercentChange(trend.changePercent)})`;
+                console.log(trendColor(trendText));
                 
                 // Show moving averages if available
                 if (trend.movingAverages) {
                     if (trend.movingAverages.sevenDay) {
-                        console.log(`   7-day moving avg: $${trend.movingAverages.sevenDay.toFixed(2)}/day`);
+                        console.log(colors.dim(`   7-day moving avg: $${trend.movingAverages.sevenDay.toFixed(2)}/day`));
                     }
                     if (trend.movingAverages.thirtyDay) {
-                        console.log(`   30-day moving avg: $${trend.movingAverages.thirtyDay.toFixed(2)}/day`);
+                        console.log(colors.dim(`   30-day moving avg: $${trend.movingAverages.thirtyDay.toFixed(2)}/day`));
                     }
                 }
                 
                 // Show week-over-week change
                 if (trend.weekOverWeekChange !== undefined) {
                     const wowSymbol = trend.weekOverWeekChange > 0 ? '^' : 'v';
-                    console.log(`   Week-over-week: ${wowSymbol} ${trend.weekOverWeekChange > 0 ? '+' : ''}${trend.weekOverWeekChange.toFixed(1)}%`);
+                    const wowText = `Week-over-week: ${wowSymbol} ${trend.weekOverWeekChange > 0 ? '+' : ''}${trend.weekOverWeekChange.toFixed(1)}%`;
+                    console.log(colors.dim(`   ${wowText}`));
                 }
                 
                 // Show projection if available
                 if (trend.projectedNextPeriod) {
-                    console.log(`   Projected next ${trend.period}: $${trend.projectedNextPeriod.toFixed(2)}`);
+                    console.log(colors.dim(`   Projected next ${trend.period}: $${trend.projectedNextPeriod.toFixed(2)}`));
                 }
                 console.log('');
             });
@@ -196,8 +204,8 @@ class FinOpsAssessmentApp {
 
         // Anomalies
         if (costAnalysis.anomalies.length > 0) {
-            console.log('\nCOST ANOMALIES DETECTED');
-            console.log('-'.repeat(60));
+            console.log('\n' + colors.subheader('COST ANOMALIES DETECTED'));
+            console.log(colors.separator('-'.repeat(60)));
             
             // Group by severity
             const critical = costAnalysis.anomalies.filter((a: any) => a.severity === 'critical');
@@ -205,35 +213,37 @@ class FinOpsAssessmentApp {
             const medium = costAnalysis.anomalies.filter((a: any) => a.severity === 'medium');
             const low = costAnalysis.anomalies.filter((a: any) => a.severity === 'low');
             
-            console.log(`Total: ${costAnalysis.anomalies.length} anomalies (${critical.length} critical, ${high.length} high, ${medium.length} medium, ${low.length} low)\n`);
+            const summary = `Total: ${costAnalysis.anomalies.length} anomalies (${colors.critical(critical.length + ' critical')}, ${colors.high(high.length + ' high')}, ${colors.medium(medium.length + ' medium')}, ${colors.low(low.length + ' low')})`;
+            console.log(summary + '\n');
             
             costAnalysis.anomalies.slice(0, 5).forEach((anomaly: any) => {
-                console.log(`[${anomaly.severity.toUpperCase()}] ${anomaly.description}`);
-                console.log(`   Date: ${anomaly.detectedDate.split('T')[0]}`);
+                const severityColor = getSeverityColor(anomaly.severity);
+                console.log(severityColor(`[${anomaly.severity.toUpperCase()}] ${anomaly.description}`));
+                console.log(colors.dim(`   Date: ${anomaly.detectedDate.split('T')[0]}`));
                 
                 if (anomaly.category) {
-                    console.log(`   Type: ${anomaly.category.replace('_', ' ')}`);
+                    console.log(colors.dim(`   Type: ${anomaly.category.replace('_', ' ')}`));
                 }
                 
                 if (anomaly.confidence) {
-                    console.log(`   Confidence: ${(anomaly.confidence * 100).toFixed(0)}%`);
+                    console.log(colors.dim(`   Confidence: ${(anomaly.confidence * 100).toFixed(0)}%`));
                 }
                 
                 if (anomaly.recommendations && anomaly.recommendations.length > 0) {
-                    console.log(`   Action: ${anomaly.recommendations[0]}`);
+                    console.log(colors.info(`   Action: ${anomaly.recommendations[0]}`));
                 }
                 console.log('');
             });
             
             if (costAnalysis.anomalies.length > 5) {
-                console.log(`   ... and ${costAnalysis.anomalies.length - 5} more anomalies\n`);
+                console.log(colors.dim(`   ... and ${costAnalysis.anomalies.length - 5} more anomalies\n`));
             }
         }
 
         // Service Cost Breakdown
         if (costAnalysis.historical.costByService && costAnalysis.historical.costByService.length > 0) {
-            console.log('\nTOP EXPENSIVE SERVICES');
-            console.log('-'.repeat(60));
+            console.log('\n' + colors.subheader('TOP EXPENSIVE SERVICES'));
+            console.log(colors.separator('-'.repeat(60)));
             
             // Sort services by cost (descending) and take top 10
             const topServices = costAnalysis.historical.costByService
@@ -242,7 +252,9 @@ class FinOpsAssessmentApp {
             
             topServices.forEach((service: any, index: number) => {
                 const padding = ' '.repeat(Math.max(0, 35 - service.serviceName.length));
-                console.log(`${index + 1}. ${service.serviceName}${padding}${service.cost.toFixed(2)} ${service.currency} (${service.percentageOfTotal.toFixed(1)}%)`);
+                const costStr = formatCurrency(service.cost, service.currency);
+                const pctStr = colors.dim(`(${service.percentageOfTotal.toFixed(1)}%)`);
+                console.log(`${colors.dim(index + 1 + '.')} ${colors.info(service.serviceName)}${padding}${costStr} ${pctStr}`);
             });
 
             // Show total by category
@@ -254,58 +266,59 @@ class FinOpsAssessmentApp {
                 return acc;
             }, {});
 
-            console.log('\nCost by Category:');
+            console.log('\n' + colors.label('Cost by Category:'));
             Object.entries(categoryTotals)
                 .sort(([, a]: any, [, b]: any) => b - a)
                 .forEach(([category, cost]: any) => {
-                    console.log(`  - ${category}: ${cost.toFixed(2)} ${costAnalysis.summary.currency}`);
+                    console.log(`  ${colors.dim('-')} ${colors.info(category)}: ${formatCurrency(cost, costAnalysis.summary.currency)}`);
                 });
         }
 
         // Smart Recommendations Section (if available)
         if (recommendationSummary && recommendationSummary.totalRecommendations > 0) {
-            console.log('\nSMART RECOMMENDATIONS');
-            console.log('-'.repeat(60));
-            console.log(`Total Recommendations: ${recommendationSummary.totalRecommendations}`);
-            console.log(`Potential Monthly Savings: $${recommendationSummary.totalPotentialMonthlySavings.toFixed(2)} USD`);
-            console.log(`Potential Annual Savings: $${recommendationSummary.totalPotentialAnnualSavings.toFixed(2)} USD`);
+            console.log('\n' + colors.subheader('SMART RECOMMENDATIONS'));
+            console.log(colors.separator('-'.repeat(60)));
+            console.log(colors.label('Total Recommendations: ') + colors.value(recommendationSummary.totalRecommendations.toString()));
+            console.log(colors.label('Potential Monthly Savings: ') + colors.savings(`$${recommendationSummary.totalPotentialMonthlySavings.toFixed(2)} USD`));
+            console.log(colors.label('Potential Annual Savings: ') + colors.savings(`$${recommendationSummary.totalPotentialAnnualSavings.toFixed(2)} USD`));
             
             // Display by category
             if (recommendationSummary.byType && Object.keys(recommendationSummary.byType).length > 0) {
-                console.log('\nBy Type:');
+                console.log('\n' + colors.label('By Type:'));
                 Object.entries(recommendationSummary.byType).forEach(([type, data]: any) => {
-                    console.log(`  ${type}: ${data.count} (save $${data.savings.toFixed(2)}/month)`);
+                    console.log(`  ${colors.info(type)}: ${data.count} ${colors.savings(`(save $${data.savings.toFixed(2)}/month)`)}`);
                 });
             }
 
             // Display by priority
             if (recommendationSummary.byPriority && Object.keys(recommendationSummary.byPriority).length > 0) {
-                console.log('\nBy Priority:');
+                console.log('\n' + colors.label('By Priority:'));
                 if (recommendationSummary.byPriority.critical) {
-                    console.log(`  Critical: ${recommendationSummary.byPriority.critical.count} ($${recommendationSummary.byPriority.critical.savings.toFixed(2)}/month)`);
+                    console.log(`  ${colors.critical('Critical')}: ${recommendationSummary.byPriority.critical.count} ${colors.savings(`($${recommendationSummary.byPriority.critical.savings.toFixed(2)}/month)`)}`);
                 }
                 if (recommendationSummary.byPriority.high) {
-                    console.log(`  High: ${recommendationSummary.byPriority.high.count} ($${recommendationSummary.byPriority.high.savings.toFixed(2)}/month)`);
+                    console.log(`  ${colors.high('High')}: ${recommendationSummary.byPriority.high.count} ${colors.savings(`($${recommendationSummary.byPriority.high.savings.toFixed(2)}/month)`)}`);
                 }
                 if (recommendationSummary.byPriority.medium) {
-                    console.log(`  Medium: ${recommendationSummary.byPriority.medium.count} ($${recommendationSummary.byPriority.medium.savings.toFixed(2)}/month)`);
+                    console.log(`  ${colors.medium('Medium')}: ${recommendationSummary.byPriority.medium.count} ${colors.savings(`($${recommendationSummary.byPriority.medium.savings.toFixed(2)}/month)`)}`);
                 }
                 if (recommendationSummary.byPriority.low) {
-                    console.log(`  Low: ${recommendationSummary.byPriority.low.count} ($${recommendationSummary.byPriority.low.savings.toFixed(2)}/month)`);
+                    console.log(`  ${colors.low('Low')}: ${recommendationSummary.byPriority.low.count} ${colors.savings(`($${recommendationSummary.byPriority.low.savings.toFixed(2)}/month)`)}`);
                 }
             }
 
             // Display top 5 recommendations
             if (recommendationSummary.topRecommendations && recommendationSummary.topRecommendations.length > 0) {
-                console.log('\nTOP RECOMMENDATIONS:');
+                console.log('\n' + colors.label('TOP RECOMMENDATIONS:'));
                 const topRecs = recommendationSummary.topRecommendations.slice(0, 5);
                 topRecs.forEach((rec: any, index: number) => {
-                    console.log(`\n${index + 1}. [${rec.priority.toUpperCase()}] ${rec.title}`);
-                    console.log(`   Savings: $${rec.potentialMonthlySavings.toFixed(2)}/month ($${rec.potentialAnnualSavings.toFixed(2)}/year)`);
-                    console.log(`   Effort: ${rec.effort}`);
-                    console.log(`   ${rec.action}`);
+                    const priorityColor = getSeverityColor(rec.priority);
+                    console.log(`\n${colors.dim((index + 1) + '.')} ${priorityColor(`[${rec.priority.toUpperCase()}]`)} ${colors.recommendation(rec.title)}`);
+                    console.log(colors.label('   Savings: ') + colors.savings(`$${rec.potentialMonthlySavings.toFixed(2)}/month ($${rec.potentialAnnualSavings.toFixed(2)}/year)`));
+                    console.log(colors.label('   Effort: ') + colors.dim(rec.effort));
+                    console.log(colors.dim(`   ${rec.action}`));
                     if (rec.implementationSteps && rec.implementationSteps.length > 0) {
-                        console.log(`   Quick Action: ${rec.implementationSteps[0]}`);
+                        console.log(colors.info(`   Quick Action: ${rec.implementationSteps[0]}`));
                     }
                 });
             }
@@ -313,20 +326,20 @@ class FinOpsAssessmentApp {
         }
 
         // Recommendations Section
-        console.log('\nRECOMMENDATIONS');
-        console.log('-'.repeat(60));
+        console.log('\n' + colors.subheader('RECOMMENDATIONS'));
+        console.log(colors.separator('-'.repeat(60)));
         
         const recommendations = this.generateRecommendations(costAnalysis);
         recommendations.forEach((rec, index) => {
-            console.log(`${index + 1}. ${rec.title}`);
-            console.log(`   ${rec.description}`);
+            console.log(colors.recommendation(`${index + 1}. ${rec.title}`));
+            console.log(colors.dim(`   ${rec.description}`));
             if (rec.potentialSavings) {
-                console.log(`   Potential Savings: ${rec.potentialSavings}`);
+                console.log(colors.savings(`   Potential Savings: ${rec.potentialSavings}`));
             }
             console.log('');
         });
 
-        console.log('\n' + '='.repeat(60));
+        console.log('\n' + colors.separator('='.repeat(60)));
     }
 
     /**
@@ -433,7 +446,7 @@ class FinOpsAssessmentApp {
     /**
      * Save assessment results to JSON file
      */
-    private saveResults(costAnalysis: any, recommendations?: any[], recommendationSummary?: any): void {
+    private async saveResults(costAnalysis: any, recommendations?: any[], recommendationSummary?: any): Promise<void> {
         try {
             const outputDir = path.join(process.cwd(), 'reports');
             
@@ -443,8 +456,10 @@ class FinOpsAssessmentApp {
             }
 
             const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
-            const filename = `finops-assessment-${timestamp}.json`;
-            const filepath = path.join(outputDir, filename);
+            
+            // Save JSON report
+            const jsonFilename = `finops-assessment-${timestamp}.json`;
+            const jsonFilepath = path.join(outputDir, jsonFilename);
 
             const report: any = {
                 generatedAt: new Date().toISOString(),
@@ -459,8 +474,16 @@ class FinOpsAssessmentApp {
                 };
             }
 
-            fs.writeFileSync(filepath, JSON.stringify(report, null, 2));
-            logInfo(`\n✓ Report saved to: ${filepath}`);
+            fs.writeFileSync(jsonFilepath, JSON.stringify(report, null, 2));
+            logInfo(`\n${colors.success('[OK]')} JSON report saved to: ${jsonFilepath}`);
+
+            // Generate PDF report
+            const pdfFilename = `finops-assessment-${timestamp}.pdf`;
+            const pdfFilepath = path.join(outputDir, pdfFilename);
+            
+            await this.pdfGenerator.generatePDF(costAnalysis, recommendationSummary, pdfFilepath);
+            logInfo(`${colors.success('[OK]')} PDF report saved to: ${pdfFilepath}`);
+            
         } catch (error) {
             logError(`Error saving results: ${error}`);
         }
