@@ -72,7 +72,7 @@ export class AzureStorageService {
         if (this.useStorage && this.containerClient) {
             try {
                 await this.saveToBlobStorage(report, filename);
-                logInfo(`✓ Report saved to Azure Blob Storage: ${filename}`);
+                logInfo(`[OK] Report saved to Azure Blob Storage: ${filename}`);
             } catch (error) {
                 logWarning(`Could not save to Azure Storage (saved locally): ${error}`);
             }

@@ -6,12 +6,14 @@
 
 import { ResourceManagementClient } from '@azure/arm-resources';
 import { DefaultAzureCredential } from '@azure/identity';
+import { CostManagementClient } from '@azure/arm-costmanagement';
 import { ResourceInventoryItem, ResourceSummary, ResourceUsage } from '../models/resourceUsage';
 import { configService } from '../utils/config';
-import { logInfo, logError } from '../utils/logger';
+import { logInfo, logError, logWarning } from '../utils/logger';
 
 export class AzureResourceService {
     private client: ResourceManagementClient;
+    private costClient: CostManagementClient;
     private credential: DefaultAzureCredential;
     private subscriptionId: string;
 
@@ -20,6 +22,7 @@ export class AzureResourceService {
         this.subscriptionId = azureConfig.subscriptionId;
         this.credential = new DefaultAzureCredential();
         this.client = new ResourceManagementClient(this.credential, this.subscriptionId);
+        this.costClient = new CostManagementClient(this.credential);
         
         logInfo('Azure Resource Service initialized');
     }
@@ -77,9 +80,12 @@ export class AzureResourceService {
             
             const inventory = await this.getResourceInventory();
             
+            // Get actual cost data by resource type
+            const costByType = await this.getCostByResourceType();
+            
             const summary: ResourceSummary = {
                 totalResources: inventory.length,
-                totalMonthlyCost: inventory.reduce((sum, r) => sum + r.currentMonthlyCost, 0),
+                totalMonthlyCost: 0, // Will be calculated from costByType
                 currency: 'USD',
                 byType: {},
                 byResourceGroup: {},
@@ -94,30 +100,31 @@ export class AzureResourceService {
                 resourcesWithRecommendations: inventory.filter(r => r.hasRecommendations).length
             };
 
-            // Aggregate by type
+            // Aggregate by type with actual costs
             for (const resource of inventory) {
                 if (!summary.byType[resource.resourceType]) {
-                    summary.byType[resource.resourceType] = { count: 0, cost: 0 };
+                    const typeCost = costByType.get(resource.resourceType) || 0;
+                    summary.byType[resource.resourceType] = { count: 0, cost: typeCost };
                 }
                 summary.byType[resource.resourceType].count++;
-                summary.byType[resource.resourceType].cost += resource.currentMonthlyCost;
 
                 // Aggregate by resource group
                 if (!summary.byResourceGroup[resource.resourceGroup]) {
                     summary.byResourceGroup[resource.resourceGroup] = { count: 0, cost: 0 };
                 }
                 summary.byResourceGroup[resource.resourceGroup].count++;
-                summary.byResourceGroup[resource.resourceGroup].cost += resource.currentMonthlyCost;
 
                 // Aggregate by location
                 if (!summary.byLocation[resource.location]) {
                     summary.byLocation[resource.location] = { count: 0, cost: 0 };
                 }
                 summary.byLocation[resource.location].count++;
-                summary.byLocation[resource.location].cost += resource.currentMonthlyCost;
             }
 
-            logInfo('Resource summary calculated');
+            // Calculate total monthly cost from all resource types
+            summary.totalMonthlyCost = Object.values(summary.byType).reduce((sum, type) => sum + type.cost, 0);
+
+            logInfo(`Resource summary calculated: ${summary.totalResources} resources, $${summary.totalMonthlyCost.toFixed(2)}/month`);
             return summary;
             
         } catch (error) {
@@ -210,5 +217,78 @@ export class AzureResourceService {
     private extractResourceGroup(resourceId: string): string {
         const match = resourceId.match(/resourceGroups\/([^\/]+)/i);
         return match ? match[1] : '';
+    }
+
+    /**
+     * Get cost data by resource type from Azure Cost Management
+     */
+    private async getCostByResourceType(): Promise<Map<string, number>> {
+        try {
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30); // Last 30 days
+
+            const costByType = new Map<string, number>();
+
+            logInfo('Fetching cost data by resource type...');
+
+            const queryDefinition = {
+                type: 'Usage',
+                timeframe: 'Custom',
+                timePeriod: {
+                    from: startDate.toISOString(),
+                    to: endDate.toISOString()
+                },
+                dataset: {
+                    granularity: 'None',
+                    aggregation: {
+                        totalCost: {
+                            name: 'Cost',
+                            function: 'Sum'
+                        }
+                    },
+                    grouping: [
+                        {
+                            type: 'Dimension',
+                            name: 'ResourceType'
+                        }
+                    ]
+                }
+            };
+
+            // Add delay to avoid rate limiting
+            await this.delay(15000);
+
+            const scope = `/subscriptions/${this.subscriptionId}`;
+            const result = await this.costClient.query.usage(scope, queryDefinition as any);
+
+            if (result.rows && result.rows.length > 0) {
+                const costIndex = result.columns?.findIndex((col: any) => col.name === 'Cost') ?? 0;
+                const resourceTypeIndex = result.columns?.findIndex((col: any) => col.name === 'ResourceType') ?? 1;
+
+                result.rows.forEach((row: any) => {
+                    const cost = costIndex >= 0 ? parseFloat(row[costIndex]) || 0 : 0;
+                    const resourceType = resourceTypeIndex >= 0 ? row[resourceTypeIndex] as string : '';
+                    
+                    if (resourceType && resourceType !== 'null' && resourceType.trim() !== '') {
+                        costByType.set(resourceType, cost);
+                    }
+                });
+            }
+
+            logInfo(`Retrieved costs for ${costByType.size} resource types`);
+            return costByType;
+
+        } catch (error) {
+            logWarning('Failed to get resource type costs, using zero costs');
+            return new Map<string, number>();
+        }
+    }
+
+    /**
+     * Delay helper for rate limiting
+     */
+    private delay(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 }
