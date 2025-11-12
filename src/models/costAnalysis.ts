@@ -92,6 +92,9 @@ export interface CostAnomaly {
     deviationPercent: number;
     severity: 'low' | 'medium' | 'high' | 'critical';
     description: string;
+    category?: 'spike' | 'drop' | 'service_concentration' | 'unusual_pattern';
+    confidence?: number; // 0-1 scale
+    recommendations?: string[];
 }
 
 export interface CostTrend {
@@ -100,6 +103,18 @@ export interface CostTrend {
     changePercent: number;
     changeAmount: number;
     dataPoints: CostDataPoint[];
+    insights?: Array<{
+        type: 'moving_average' | 'week_over_week' | 'seasonality' | 'projection';
+        description: string;
+        value: number;
+        confidence: 'low' | 'medium' | 'high';
+    }>;
+    movingAverages?: {
+        sevenDay?: number;
+        thirtyDay?: number;
+    };
+    weekOverWeekChange?: number;
+    projectedNextPeriod?: number;
 }
 
 export interface ComprehensiveCostAnalysis {

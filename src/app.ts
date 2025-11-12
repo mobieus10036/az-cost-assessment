@@ -158,11 +158,33 @@ class FinOpsAssessmentApp {
 
         // Trends
         if (costAnalysis.trends.length > 0) {
-            console.log('\n📉 COST TRENDS');
+            console.log('\n📉 COST TRENDS & PATTERNS');
             console.log('-'.repeat(60));
             costAnalysis.trends.forEach((trend: any) => {
                 const trendSymbol = trend.direction === 'increasing' ? '↑' : trend.direction === 'decreasing' ? '↓' : '→';
                 console.log(`${trendSymbol} ${trend.period.toUpperCase()}: ${trend.direction} (${trend.changePercent > 0 ? '+' : ''}${trend.changePercent.toFixed(1)}%)`);
+                
+                // Show moving averages if available
+                if (trend.movingAverages) {
+                    if (trend.movingAverages.sevenDay) {
+                        console.log(`   📊 7-day moving avg: $${trend.movingAverages.sevenDay.toFixed(2)}/day`);
+                    }
+                    if (trend.movingAverages.thirtyDay) {
+                        console.log(`   📊 30-day moving avg: $${trend.movingAverages.thirtyDay.toFixed(2)}/day`);
+                    }
+                }
+                
+                // Show week-over-week change
+                if (trend.weekOverWeekChange !== undefined) {
+                    const wowSymbol = trend.weekOverWeekChange > 0 ? '↑' : '↓';
+                    console.log(`   📅 Week-over-week: ${wowSymbol} ${trend.weekOverWeekChange > 0 ? '+' : ''}${trend.weekOverWeekChange.toFixed(1)}%`);
+                }
+                
+                // Show projection if available
+                if (trend.projectedNextPeriod) {
+                    console.log(`   🔮 Projected next ${trend.period}: $${trend.projectedNextPeriod.toFixed(2)}`);
+                }
+                console.log('');
             });
         }
 
@@ -170,13 +192,36 @@ class FinOpsAssessmentApp {
         if (costAnalysis.anomalies.length > 0) {
             console.log('\n⚠️  COST ANOMALIES DETECTED');
             console.log('-'.repeat(60));
+            
+            // Group by severity
+            const critical = costAnalysis.anomalies.filter((a: any) => a.severity === 'critical');
+            const high = costAnalysis.anomalies.filter((a: any) => a.severity === 'high');
+            const medium = costAnalysis.anomalies.filter((a: any) => a.severity === 'medium');
+            const low = costAnalysis.anomalies.filter((a: any) => a.severity === 'low');
+            
+            console.log(`Total: ${costAnalysis.anomalies.length} anomalies (🔴 ${critical.length} critical, 🟠 ${high.length} high, 🟡 ${medium.length} medium, 🟢 ${low.length} low)\n`);
+            
             costAnalysis.anomalies.slice(0, 5).forEach((anomaly: any) => {
                 const severityIcon = anomaly.severity === 'critical' ? '🔴' : anomaly.severity === 'high' ? '🟠' : anomaly.severity === 'medium' ? '🟡' : '🟢';
                 console.log(`${severityIcon} [${anomaly.severity.toUpperCase()}] ${anomaly.description}`);
-                console.log(`   Date: ${anomaly.detectedDate.split('T')[0]}`);
+                console.log(`   📅 Date: ${anomaly.detectedDate.split('T')[0]}`);
+                
+                if (anomaly.category) {
+                    console.log(`   🏷️  Type: ${anomaly.category.replace('_', ' ')}`);
+                }
+                
+                if (anomaly.confidence) {
+                    console.log(`   📈 Confidence: ${(anomaly.confidence * 100).toFixed(0)}%`);
+                }
+                
+                if (anomaly.recommendations && anomaly.recommendations.length > 0) {
+                    console.log(`   💡 Action: ${anomaly.recommendations[0]}`);
+                }
+                console.log('');
             });
+            
             if (costAnalysis.anomalies.length > 5) {
-                console.log(`\n   ... and ${costAnalysis.anomalies.length - 5} more anomalies`);
+                console.log(`   ... and ${costAnalysis.anomalies.length - 5} more anomalies\n`);
             }
         }
 

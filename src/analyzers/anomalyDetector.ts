@@ -61,6 +61,8 @@ export class AnomalyDetector {
             // Flag as anomaly if deviation exceeds threshold
             if (Math.abs(deviationPercent) > this.anomalyThresholdPercent) {
                 const severity = this.calculateSeverity(Math.abs(deviationPercent));
+                const category: 'spike' | 'drop' = deviationPercent > 0 ? 'spike' : 'drop';
+                const confidence = this.calculateConfidence(Math.abs(zScore));
                 
                 anomalies.push({
                     id: `anomaly-daily-${Date.now()}-${index}`,
@@ -69,7 +71,10 @@ export class AnomalyDetector {
                     actualCost: dataPoint.cost,
                     deviationPercent,
                     severity,
-                    description: `Daily cost ${deviationPercent > 0 ? 'spike' : 'drop'} detected: ${Math.abs(deviationPercent).toFixed(1)}% deviation from average`
+                    category,
+                    confidence,
+                    description: `Daily cost ${category} detected: ${Math.abs(deviationPercent).toFixed(1)}% deviation from average`,
+                    recommendations: this.getAnomalyRecommendations(category, deviationPercent)
                 });
             }
         });
@@ -97,7 +102,14 @@ export class AnomalyDetector {
                     actualCost: service.cost,
                     deviationPercent: service.percentageOfTotal,
                     severity: 'medium',
-                    description: `Service ${service.serviceName} represents ${service.percentageOfTotal.toFixed(1)}% of total costs - consider investigation`
+                    category: 'service_concentration',
+                    confidence: 0.8,
+                    description: `Service ${service.serviceName} represents ${service.percentageOfTotal.toFixed(1)}% of total costs - consider investigation`,
+                    recommendations: [
+                        `Review ${service.serviceName} usage patterns for optimization opportunities`,
+                        'Consider diversifying workloads to reduce concentration risk',
+                        'Implement cost allocation tags to track service usage by team/project'
+                    ]
                 });
             }
         });
@@ -113,6 +125,41 @@ export class AnomalyDetector {
         if (deviationPercent > 50) return 'high';
         if (deviationPercent > 30) return 'medium';
         return 'low';
+    }
+
+    /**
+     * Calculate confidence score based on Z-score (0-1 scale)
+     */
+    private calculateConfidence(zScore: number): number {
+        // Higher Z-score = more confident it's an anomaly
+        // Z-score of 3 = ~99.7% confidence
+        if (zScore >= 3) return 0.997;
+        if (zScore >= 2) return 0.95;
+        if (zScore >= 1.5) return 0.85;
+        if (zScore >= 1) return 0.68;
+        return 0.5;
+    }
+
+    /**
+     * Get recommendations for handling specific anomaly types
+     */
+    private getAnomalyRecommendations(category: 'spike' | 'drop', deviationPercent: number): string[] {
+        const recommendations: string[] = [];
+        
+        if (category === 'spike') {
+            recommendations.push('Review Azure Activity Log for unusual deployments or resource changes');
+            recommendations.push('Check for runaway processes or unexpected auto-scaling events');
+            if (Math.abs(deviationPercent) > 50) {
+                recommendations.push('URGENT: Investigate immediately to prevent continued overspending');
+            }
+            recommendations.push('Use Azure Cost Analysis to identify which services contributed to the spike');
+        } else {
+            recommendations.push('Verify if cost reduction was intentional (resource deletion, optimization)');
+            recommendations.push('Check for service interruptions or suspended resources');
+            recommendations.push('Review if workloads were moved to different subscriptions');
+        }
+        
+        return recommendations;
     }
 
     /**
