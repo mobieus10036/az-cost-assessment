@@ -139,14 +139,28 @@ class FinOpsAssessmentApp {
             console.log('No daily cost data available');
         }
 
-        // Month-over-Month Comparison
-        console.log('\nMONTH-OVER-MONTH COMPARISON');
+        // Month-over-Month Comparison (3 months)
+        console.log('\nMONTHLY COST COMPARISON');
         console.log('-'.repeat(60));
-        const comparison = costAnalysis.current.comparisonToPreviousMonth;
-        const changeSymbol = comparison.changePercent > 0 ? '^' : comparison.changePercent < 0 ? 'v' : '-';
-        console.log(`Previous Month:  ${comparison.previousMonthTotal.toFixed(2)} ${costAnalysis.summary.currency}`);
-        console.log(`Current Month:   ${costAnalysis.current.monthToDateCost.toFixed(2)} ${costAnalysis.summary.currency}`);
-        console.log(`Change:          ${changeSymbol} ${comparison.changeAmount > 0 ? '+' : ''}${comparison.changeAmount.toFixed(2)} (${comparison.changePercent > 0 ? '+' : ''}${comparison.changePercent.toFixed(1)}%)`);
+        
+        const monthlyComp = costAnalysis.current.monthlyComparison;
+        
+        // Show three months
+        console.log(`${monthlyComp.twoMonthsAgo.name.padEnd(20)} ${monthlyComp.twoMonthsAgo.total.toFixed(2).padStart(10)} ${costAnalysis.summary.currency}`);
+        console.log(`${monthlyComp.lastMonth.name.padEnd(20)} ${monthlyComp.lastMonth.total.toFixed(2).padStart(10)} ${costAnalysis.summary.currency}`);
+        console.log(`${monthlyComp.currentMonth.name.padEnd(20)} ${monthlyComp.currentMonth.monthToDate.toFixed(2).padStart(10)} ${costAnalysis.summary.currency} (month-to-date)`);
+        console.log(`${' '.repeat(20)} ${monthlyComp.currentMonth.projected.toFixed(2).padStart(10)} ${costAnalysis.summary.currency} (projected)`);
+        console.log('');
+        
+        // Show changes
+        const historicalSymbol = monthlyComp.lastTwoMonthsChange.percent > 0 ? '^' : monthlyComp.lastTwoMonthsChange.percent < 0 ? 'v' : '-';
+        const projectedSymbol = monthlyComp.projectedChange.percent > 0 ? '^' : monthlyComp.projectedChange.percent < 0 ? 'v' : '-';
+        
+        console.log(`${monthlyComp.twoMonthsAgo.name} to ${monthlyComp.lastMonth.name}:`);
+        console.log(`  ${historicalSymbol} ${monthlyComp.lastTwoMonthsChange.amount > 0 ? '+' : ''}${monthlyComp.lastTwoMonthsChange.amount.toFixed(2)} ${costAnalysis.summary.currency} (${monthlyComp.lastTwoMonthsChange.percent > 0 ? '+' : ''}${monthlyComp.lastTwoMonthsChange.percent.toFixed(1)}%)`);
+        console.log('');
+        console.log(`${monthlyComp.lastMonth.name} to ${monthlyComp.currentMonth.name} (projected):`);
+        console.log(`  ${projectedSymbol} ${monthlyComp.projectedChange.amount > 0 ? '+' : ''}${monthlyComp.projectedChange.amount.toFixed(2)} ${costAnalysis.summary.currency} (${monthlyComp.projectedChange.percent > 0 ? '+' : ''}${monthlyComp.projectedChange.percent.toFixed(1)}%)`);
 
         // Trends
         if (costAnalysis.trends.length > 0) {

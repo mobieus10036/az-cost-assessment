@@ -170,10 +170,18 @@ export class AzureCostManagementService {
             // Add delay before next query
             await this.delay(this.API_DELAY_MS);
             
-            // Get previous month for comparison
+            // Get previous month (last full month)
             const prevMonthStart = subMonths(monthStart, 1);
             const prevMonthEnd = endOfMonth(prevMonthStart);
             const prevMonthQuery = await this.queryActualCosts(prevMonthStart, prevMonthEnd);
+            
+            // Add delay before next query
+            await this.delay(this.API_DELAY_MS);
+            
+            // Get 2 months ago (second to last full month)
+            const twoMonthsAgoStart = subMonths(monthStart, 2);
+            const twoMonthsAgoEnd = endOfMonth(twoMonthsAgoStart);
+            const twoMonthsAgoQuery = await this.queryActualCosts(twoMonthsAgoStart, twoMonthsAgoEnd);
             
             // Calculate estimated month-end cost based on daily average
             const daysElapsed = Math.floor((now.getTime() - monthStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -181,9 +189,21 @@ export class AzureCostManagementService {
             const avgDailyCost = currentMonthQuery.totalCost / daysElapsed;
             const estimatedMonthEndCost = avgDailyCost * daysInMonth;
             
+            // Old comparison (current partial vs last full) - keeping for backward compatibility
             const changeAmount = currentMonthQuery.totalCost - prevMonthQuery.totalCost;
             const changePercent = prevMonthQuery.totalCost > 0 
                 ? (changeAmount / prevMonthQuery.totalCost) * 100 
+                : 0;
+
+            // New 3-month comparison
+            const lastTwoMonthsChangeAmount = prevMonthQuery.totalCost - twoMonthsAgoQuery.totalCost;
+            const lastTwoMonthsChangePercent = twoMonthsAgoQuery.totalCost > 0
+                ? (lastTwoMonthsChangeAmount / twoMonthsAgoQuery.totalCost) * 100
+                : 0;
+                
+            const projectedChangeAmount = estimatedMonthEndCost - prevMonthQuery.totalCost;
+            const projectedChangePercent = prevMonthQuery.totalCost > 0
+                ? (projectedChangeAmount / prevMonthQuery.totalCost) * 100
                 : 0;
 
             const currentData: CurrentCostData = {
@@ -200,6 +220,29 @@ export class AzureCostManagementService {
                     previousMonthTotal: prevMonthQuery.totalCost,
                     changeAmount,
                     changePercent
+                },
+                monthlyComparison: {
+                    twoMonthsAgo: {
+                        name: format(twoMonthsAgoStart, 'MMMM yyyy'),
+                        total: twoMonthsAgoQuery.totalCost
+                    },
+                    lastMonth: {
+                        name: format(prevMonthStart, 'MMMM yyyy'),
+                        total: prevMonthQuery.totalCost
+                    },
+                    currentMonth: {
+                        name: format(monthStart, 'MMMM yyyy'),
+                        monthToDate: currentMonthQuery.totalCost,
+                        projected: estimatedMonthEndCost
+                    },
+                    lastTwoMonthsChange: {
+                        amount: lastTwoMonthsChangeAmount,
+                        percent: lastTwoMonthsChangePercent
+                    },
+                    projectedChange: {
+                        amount: projectedChangeAmount,
+                        percent: projectedChangePercent
+                    }
                 }
             };
 

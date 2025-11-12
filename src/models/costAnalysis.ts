@@ -59,6 +59,29 @@ export interface CurrentCostData {
         changeAmount: number;
         changePercent: number;
     };
+    monthlyComparison: {
+        twoMonthsAgo: {
+            name: string;  // e.g., "September 2025"
+            total: number;
+        };
+        lastMonth: {
+            name: string;  // e.g., "October 2025"
+            total: number;
+        };
+        currentMonth: {
+            name: string;  // e.g., "November 2025"
+            monthToDate: number;
+            projected: number;
+        };
+        lastTwoMonthsChange: {
+            amount: number;
+            percent: number;
+        };
+        projectedChange: {
+            amount: number;
+            percent: number;
+        };
+    };
 }
 
 export interface ForecastDataPoint {
