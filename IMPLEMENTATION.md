@@ -36,13 +36,13 @@ Ensure you have the **Cost Management Reader** role on your subscription:
 
 ```powershell
 # Check your role assignments
-az role assignment list --assignee wchomak@mobieuslabs.onmicrosoft.com --subscription "f007d6d5-becd-4305-8649-2e4b77b66f08"
+az role assignment list --assignee YOUR_EMAIL@YOUR_DOMAIN.com --subscription "YOUR_SUBSCRIPTION_ID"
 
 # If needed, assign the role (requires Owner or User Access Administrator)
 az role assignment create `
-  --assignee wchomak@mobieuslabs.onmicrosoft.com `
+  --assignee YOUR_EMAIL@YOUR_DOMAIN.com `
   --role "Cost Management Reader" `
-  --scope "/subscriptions/f007d6d5-becd-4305-8649-2e4b77b66f08"
+  --scope "/subscriptions/YOUR_SUBSCRIPTION_ID"
 ```
 
 ### Step 2: Implement the Query API

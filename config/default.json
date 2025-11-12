@@ -1,15 +1,15 @@
 {
   "azure": {
-    "subscriptionId": "bfa1c037-e5d1-4026-af79-1cde85bb29d7",
-    "tenantId": "25cfe2b5-4780-4220-babb-8b90f37b2c53",
-    "scope": "/subscriptions/bfa1c037-e5d1-4026-af79-1cde85bb29d7"
+    "subscriptionId": "",
+    "tenantId": "",
+    "scope": ""
   },
   "storage": {
-    "accountName": "deveus2stgcore",
-    "subscriptionId": "f007d6d5-becd-4305-8649-2e4b77b66f08",
+    "accountName": "",
+    "subscriptionId": "",
     "containerName": "finops-reports",
     "tableName": "FinOpsCostData",
-    "useStorage": true
+    "useStorage": false
   },
   "analysis": {
     "historicalDays": 90,

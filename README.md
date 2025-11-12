@@ -2,6 +2,18 @@
 
 A comprehensive proof of concept (PoC) for analyzing Azure services and their associated costs. This tool provides Azure engineers with programmatic insights into spending patterns, cost trends, forecasts, and optimization opportunities.
 
+## 🔒 Security & Privacy First
+
+**⚠️ IMPORTANT**: This tool accesses real Azure cost and resource data.
+
+- **Never commit `.env` files** to version control
+- **Reports contain sensitive data** - subscription IDs, resource names, costs
+- **Local reports are gitignored** by default
+- **Review config files** before making repository public
+- **Use placeholders** in documentation examples (no real IDs/emails)
+
+See [Security Best Practices](#-security-best-practices) below for details.
+
 ## 🎯 What This Tool Delivers
 
 This application analyzes your Azure subscription and provides:
@@ -406,7 +418,64 @@ MIT License - See LICENSE file for details
 
 - **Logging and Configuration**: Utilities for logging application events and managing configuration settings.
 
+## 🔒 Security Best Practices
+
+### Protecting Sensitive Data
+
+This tool accesses and generates reports containing:
+- Azure Subscription IDs
+- Tenant IDs
+- Resource names and IDs
+- Cost data
+- Resource group names
+
+**Never commit these to public repositories!**
+
+### Files to Protect
+
+✅ **Already Protected** (in .gitignore):
+- `.env` - Your credentials
+- `reports/*.json` - Generated cost reports
+
+⚠️ **Review Before Sharing**:
+- `config/default.json` - Should use environment variables only
+- `config/production.json` - Should not contain real credentials
+- Documentation files - Replace real IDs/emails with placeholders
+
+### Safe Configuration
+
+**DO**:
+- ✅ Use `.env` for all sensitive values
+- ✅ Use `.env.example` as a template with placeholders
+- ✅ Store reports locally (they're gitignored)
+- ✅ Review `git status` before commits
+
+**DON'T**:
+- ❌ Commit `.env` files
+- ❌ Put real subscription IDs in config files
+- ❌ Include email addresses in documentation
+- ❌ Commit reports to public repos
+
+### For Public Sharing
+
+Before making your repository public:
+
+1. **Check for secrets**:
+   ```bash
+   git grep -i "subscriptionid\|tenantid\|@.*\.com"
+   ```
+
+2. **Verify `.gitignore`**:
+   ```bash
+   cat .gitignore | grep -E "\.env|reports"
+   ```
+
+3. **Review all config files** for placeholders
+
+4. **Test with a clean clone** to ensure no secrets leak
+
 ## Setup Instructions
+
 
 1. **Clone the Repository**:
    ```bash

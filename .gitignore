@@ -18,8 +18,8 @@ build/
 logs/
 *.log
 
-# Reports (optional - uncomment if you don't want to commit reports)
-# reports/*.json
+# Reports - contain sensitive subscription and resource data
+reports/*.json
 
 # Operational scripts (backup management, etc.)
 scripts/enable-backup-*.ps1
