@@ -1,6 +1,20 @@
 # Azure Cost Analyzer
 
+![TypeScript](https://img.shields.io/badge/TypeScript-5.6+-blue?logo=typescript)
+![Node.js](https://img.shields.io/badge/Node.js-18.0+-green?logo=node.js)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Azure](https://img.shields.io/badge/Azure-Cost%20Management-0078D4?logo=microsoft-azure)
+![Status](https://img.shields.io/badge/status-production--ready-brightgreen)
+
 A comprehensive Azure cost analysis tool for tracking spending, identifying trends, detecting anomalies, and optimizing cloud costs. This tool provides Azure engineers with programmatic insights into spending patterns, cost forecasts, and actionable optimization opportunities.
+
+## ✨ New in v1.0
+
+- 🎨 **Professional colored console output** with Azure-themed palette
+- 📄 **PDF report generation** for easy sharing with stakeholders
+- 📊 **3-month cost comparison** (apples-to-apples analysis)
+- 🤖 **Smart recommendations** for cost optimization
+- 📈 **Anomaly detection** with statistical analysis
 
 ## 🔒 Security & Privacy First
 
@@ -502,10 +516,182 @@ Before making your repository public:
    npm test
    ```
 
-## Usage
+## 💡 Common Use Cases
 
-This PoC can be used to analyze Azure services and their costs, providing insights that can help optimize resource usage and reduce unnecessary expenses. The application can be extended with additional features as needed.
+### Daily Cost Monitoring
+Run the analyzer every morning to review yesterday's spending:
+```powershell
+# Windows Task Scheduler
+schtasks /create /tn "Azure Cost Analysis" /tr "cd C:\path\to\azure-cost-analyzer && npm start" /sc daily /st 08:00
+```
 
-## Contributing
+```bash
+# Linux/Mac cron (8 AM daily)
+0 8 * * * cd /path/to/azure-cost-analyzer && npm start >> logs/cron.log 2>&1
+```
 
-Contributions are welcome! Please submit a pull request or open an issue for any suggestions or improvements.
+### Weekly Executive Reports
+Generate PDF reports for weekly stakeholder meetings:
+```bash
+npm start  # Generates both JSON and PDF in reports/ directory
+```
+Share the PDF report (`reports/finops-assessment-YYYY-MM-DDTHH-mm-ss.pdf`) with your team.
+
+### Budget Alert Analysis
+When Azure Budget alerts trigger, run this tool to:
+- Identify which services caused the spike
+- Detect cost anomalies
+- Get actionable recommendations
+- Review trend analysis
+
+### Monthly Cost Reviews
+Use the 3-month comparison feature to:
+- Track month-over-month changes
+- Compare full months (apples-to-apples)
+- Project current month-end costs
+- Identify seasonal patterns
+
+### Pre-Purchase Analysis
+Before buying Reserved Instances:
+- Review 90-day usage patterns
+- Identify consistently running resources
+- Calculate potential savings
+- Validate RI purchase decisions
+
+## 🔧 Troubleshooting
+
+### Rate Limiting Errors
+**Symptom**: `429 Too Many Requests` or throttling errors
+
+**Solution**: The tool includes automatic protection:
+- 15-second delays between API calls
+- Exponential backoff retry logic
+- Analysis takes ~2-3 minutes to avoid throttling
+
+**Manual Override** (not recommended):
+```typescript
+// src/services/azureCostManagementService.ts
+private readonly API_DELAY_MS = 15000; // Increase if needed
+```
+
+### Permission Errors
+**Symptom**: `Authorization failed` or `Forbidden` errors
+
+**Solution**: Ensure you have the required Azure role:
+```bash
+# Check your current roles
+az role assignment list --assignee YOUR_EMAIL --output table
+
+# Required role: Cost Management Reader
+az role assignment create \
+  --role "Cost Management Reader" \
+  --assignee YOUR_EMAIL \
+  --scope /subscriptions/YOUR_SUBSCRIPTION_ID
+```
+
+### No Data Returned
+**Symptom**: "No cost data available" or empty reports
+
+**Checklist**:
+1. Verify subscription ID in `.env`:
+   ```bash
+   az account show --query id -o tsv
+   ```
+2. Check Azure CLI login:
+   ```bash
+   az account show
+   ```
+3. Ensure costs exist in the date range (past 90 days)
+4. Verify you're using the correct subscription:
+   ```bash
+   az account set --subscription YOUR_SUBSCRIPTION_ID
+   ```
+
+### TypeScript Compilation Errors
+**Symptom**: Build fails with type errors
+
+**Solution**:
+```bash
+# Clean and reinstall
+rm -rf node_modules package-lock.json
+npm install
+
+# Rebuild
+npm run build
+```
+
+### PDF Generation Fails
+**Symptom**: JSON report created but no PDF
+
+**Solution**:
+```bash
+# Ensure pdfkit is installed
+npm install pdfkit @types/pdfkit
+
+# Check reports directory permissions
+mkdir -p reports
+chmod 755 reports
+```
+
+### Colors Not Displaying in PowerShell
+**Symptom**: Console shows ANSI codes instead of colors
+
+**Solution**: Use Windows Terminal or enable ANSI in PowerShell:
+```powershell
+# Enable ANSI colors in PowerShell
+Set-ItemProperty HKCU:\Console VirtualTerminalLevel -Type DWORD 1
+```
+
+### Azure CLI Not Found
+**Symptom**: `az: command not found`
+
+**Solution**: Install Azure CLI:
+- **Windows**: Download from https://aka.ms/installazurecliwindows
+- **Mac**: `brew install azure-cli`
+- **Linux**: `curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash`
+
+After installation:
+```bash
+az login
+az account set --subscription YOUR_SUBSCRIPTION_ID
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Quick Start for Contributors
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes
+4. Run tests: `npm run build && npm start`
+5. Commit: `git commit -m 'Add amazing feature'`
+6. Push: `git push origin feature/amazing-feature`
+7. Open a Pull Request
+
+## 📋 Roadmap
+
+See [CHANGELOG.md](CHANGELOG.md) for planned features:
+- [ ] GitHub Actions CI/CD
+- [ ] Unit test suite
+- [ ] Multi-subscription support
+- [ ] CSV/Excel export
+- [ ] Email notifications
+- [ ] Custom date ranges
+- [ ] Resource group breakdown
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with Azure SDK for JavaScript/TypeScript
+- Inspired by Azure FinOps best practices
+- Uses statistical methods from data science community
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/mobieus10036/azure-cost-analyzer/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/mobieus10036/azure-cost-analyzer/discussions)
+- **Documentation**: See [QUICKSTART.md](QUICKSTART.md) and other guides

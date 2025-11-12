@@ -3,6 +3,30 @@
   "version": "1.0.0",
   "description": "A comprehensive Azure cost analysis tool for tracking spending, identifying trends, and optimizing cloud costs.",
   "main": "src/app.ts",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mobieus10036/azure-cost-analyzer.git"
+  },
+  "keywords": [
+    "azure",
+    "cost-management",
+    "finops",
+    "cloud-costs",
+    "cost-optimization",
+    "azure-cost-analysis",
+    "cost-tracking",
+    "azure-sdk"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mobieus10036/azure-cost-analyzer/issues"
+  },
+  "homepage": "https://github.com/mobieus10036/azure-cost-analyzer#readme",
   "scripts": {
     "start": "ts-node src/app.ts",
     "test": "jest",
