@@ -1,7 +1,7 @@
 {
-  "name": "azure-finops-assessment-poc",
+  "name": "azure-cost-analyzer",
   "version": "1.0.0",
-  "description": "A proof of concept project for analyzing Azure services and their associated costs.",
+  "description": "A comprehensive Azure cost analysis tool for tracking spending, identifying trends, and optimizing cloud costs.",
   "main": "src/app.ts",
   "scripts": {
     "start": "ts-node src/app.ts",

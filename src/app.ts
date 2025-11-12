@@ -23,7 +23,35 @@ class FinOpsAssessmentApp {
 
     constructor() {
         logInfo('='.repeat(60));
-        logInfo('Azure FinOps Assessment PoC');
+        /**
+ * Azure Cost Analyzer - Main Application
+ * Real-time Azure cost analysis, optimization, and forecasting
+ */
+
+import { CostManagementService } from './services/azureCostManagementService.js';
+import { ResourceService } from './services/azureResourceService.js';
+import { CostTrendAnalyzer } from './analyzers/costTrendAnalyzer.js';
+import { AnomalyDetector } from './analyzers/anomalyDetector.js';
+import { ResourceOptimizationAnalyzer } from './analyzers/resourceOptimizationAnalyzer.js';
+import { logInfo, logError, logSuccess, logWarning } from './utils/logger.js';
+import { config } from './utils/config.js';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+/**
+ * Main application class for Azure cost analysis
+ */
+class CostAnalyzer {
+    private costService: CostManagementService;
+    private resourceService: ResourceService;
+    private trendAnalyzer: CostTrendAnalyzer;
+    private anomalyDetector: AnomalyDetector;
+    private optimizationAnalyzer: ResourceOptimizationAnalyzer;
+
+    constructor() {
+        logInfo('Azure Cost Analyzer');
         logInfo('='.repeat(60));
 
         // Initialize services
@@ -36,11 +64,11 @@ class FinOpsAssessmentApp {
     }
 
     /**
-     * Run the complete FinOps assessment
+     * Run the complete cost analysis
      */
-    public async run(): Promise<void> {
+    async run(): Promise<void> {
         try {
-            logInfo('Starting FinOps assessment...\n');
+            logInfo('Starting Azure cost analysis...\n');
 
             // Step 1: Gather comprehensive cost analysis
             logInfo('Step 1: Gathering cost data...');
@@ -70,7 +98,7 @@ class FinOpsAssessmentApp {
             this.saveResults(costAnalysis, resourceSummary);
 
             logInfo('\n' + '='.repeat(60));
-            logInfo('FinOps assessment completed successfully!');
+            logInfo('Cost analysis completed successfully!');
             logInfo('='.repeat(60));
 
         } catch (error) {
@@ -84,7 +112,7 @@ class FinOpsAssessmentApp {
      */
     private displayReport(costAnalysis: any, resourceSummary: any): void {
         console.log('\n' + '='.repeat(60));
-        console.log('AZURE FINOPS ASSESSMENT REPORT');
+        console.log('AZURE COST ANALYZER REPORT');
         console.log('='.repeat(60));
         
         // Summary Section
@@ -378,7 +406,7 @@ class FinOpsAssessmentApp {
             }
 
             const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
-            const filename = `finops-assessment-${timestamp}.json`;
+            const filename = `cost-analysis-${timestamp}.json`;
             const filepath = path.join(outputDir, filename);
 
             const report = {

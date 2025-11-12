@@ -1,5 +1,5 @@
 /**
- * Cost Analysis Models for Azure FinOps Assessment
+ * Cost Analysis Models for Azure Cost Analyzer
  * Supports historical, current, and forecasted cost data
  */
 

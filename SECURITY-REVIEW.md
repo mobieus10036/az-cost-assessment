@@ -1,4 +1,4 @@
-# Code Review Summary - Azure FinOps Assessment Tool
+# Code Review Summary - Azure Cost Analyzer
 
 **Review Date**: November 12, 2025  
 **Status**: ✅ **READY FOR PUBLIC SHARING**
@@ -89,7 +89,7 @@
 ## 📜 License
 
 - **Added**: MIT License
-- **Attribution**: "Azure FinOps Assessment Contributors"
+- **Attribution**: "Azure Cost Analyzer Contributors"
 - **Status**: Open source ready
 
 ## 🚀 Ready for Public Sharing

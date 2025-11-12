@@ -1,8 +1,8 @@
-# Azure Storage Setup Script for FinOps Assessment
-# This script will help you configure Azure Storage for your FinOps assessments
+# Azure Storage Setup Script for Azure Cost Analyzer
+# This script will help you configure Azure Storage for cost analysis data
 
-Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "Azure Storage Setup for FinOps Assessment PoC" -ForegroundColor Cyan
+Write-Host "======================================" -ForegroundColor Cyan
+Write-Host "Azure Storage Setup for Azure Cost Analyzer" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
 

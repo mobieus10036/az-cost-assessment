@@ -1,6 +1,6 @@
-# Value Proposition: Azure FinOps Assessment PoC
+# Value Proposition: Azure Cost Analyzer
 
-## What Makes This PoC Valuable for Azure Engineers?
+## What Makes This Tool Valuable for Azure Engineers?
 
 ### 🎯 Programmatic Cost Intelligence
 

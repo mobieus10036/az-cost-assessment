@@ -1,6 +1,6 @@
 /**
  * Azure Storage Service
- * Cost-effective alternative to Cosmos DB for storing FinOps assessment data
+ * Cost-effective alternative to Cosmos DB for storing cost analysis data
  * Uses Blob Storage for JSON reports and Table Storage for structured data
  */
 
@@ -63,7 +63,7 @@ export class AzureStorageService {
      */
     public async saveAssessmentReport(report: any): Promise<string> {
         const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
-        const filename = `finops-assessment-${timestamp}.json`;
+        const filename = `cost-analysis-${timestamp}.json`;
         
         // Always save locally first
         const localPath = await this.saveLocalReport(report, filename);

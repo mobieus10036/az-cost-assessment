@@ -1,6 +1,6 @@
-# Azure FinOps Assessment PoC
+# Azure Cost Analyzer
 
-A comprehensive proof of concept (PoC) for analyzing Azure services and their associated costs. This tool provides Azure engineers with programmatic insights into spending patterns, cost trends, forecasts, and optimization opportunities.
+A comprehensive Azure cost analysis tool for tracking spending, identifying trends, detecting anomalies, and optimizing cloud costs. This tool provides Azure engineers with programmatic insights into spending patterns, cost forecasts, and actionable optimization opportunities.
 
 ## 🔒 Security & Privacy First
 
@@ -45,7 +45,7 @@ The application uses:
 ## 📁 Project Structure
 
 ```
-azure-finops-assessment-poc/
+azure-cost-analyzer/
 ├── src/
 │   ├── services/
 │   │   ├── azureCostManagementService.ts   # Cost data fetching
@@ -85,8 +85,8 @@ azure-finops-assessment-poc/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/mobieus10036/AzCostAssessment.git
-   cd AzCostAssessment
+   git clone https://github.com/mobieus10036/azure-cost-analyzer.git
+   cd azure-cost-analyzer
    ```
 
 2. **Install dependencies**:
@@ -145,7 +145,7 @@ The application will:
 4. Generate 30-day cost forecast
 5. Detect trends and anomalies
 6. Display a comprehensive report
-7. Save results to `reports/finops-assessment-TIMESTAMP.json`
+7. Save results to `reports/cost-analysis-TIMESTAMP.json`
 
 ### Execution Time
 
@@ -161,7 +161,7 @@ The assessment takes approximately **2 minutes** to complete. This timing is int
 
 ```
 ============================================================
-AZURE FINOPS ASSESSMENT REPORT
+AZURE COST ANALYZER REPORT
 ============================================================
 
 📊 COST SUMMARY
@@ -480,7 +480,7 @@ Before making your repository public:
 1. **Clone the Repository**:
    ```bash
    git clone <repository-url>
-   cd azure-finops-assessment-poc
+   cd azure-cost-analyzer
    ```
 
 2. **Install Dependencies**:

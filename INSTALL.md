@@ -106,7 +106,7 @@ npm run dev
 
 **Console Output**: Comprehensive report displayed in terminal
 
-**JSON Report**: Saved to `reports/finops-assessment-YYYY-MM-DD-HH-mm-ss.json`
+**JSON Report**: Saved to `reports/cost-analysis-YYYY-MM-DD-HH-mm-ss.json`
 
 **Logs**: Application logs saved to `logs/` directory
 
@@ -170,7 +170,7 @@ npm test
 ## Directory Structure After Setup
 
 ```
-azure-finops-assessment-poc/
+azure-cost-analyzer/
 ├── node_modules/         # Dependencies (after npm install)
 ├── dist/                 # Compiled JavaScript (after npm run build)
 ├── reports/              # Generated assessment reports

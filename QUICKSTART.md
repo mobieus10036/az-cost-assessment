@@ -1,6 +1,6 @@
-# Quick Start Guide - Azure FinOps Assessment
+# Quick Start Guide - Azure Cost Analyzer
 
-Get your FinOps assessment running in 5 minutes!
+Get your Azure cost analysis running in 5 minutes!
 
 ## Prerequisites
 
@@ -16,8 +16,8 @@ Before starting, ensure you have:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/mobieus10036/AzCostAssessment.git
-cd AzCostAssessment
+git clone https://github.com/mobieus10036/azure-cost-analyzer.git
+cd azure-cost-analyzer
 ```
 
 ### 2. Install Dependencies
@@ -169,7 +169,7 @@ You'll see a comprehensive report like this:
 
 ```
 ============================================================
-AZURE FINOPS ASSESSMENT REPORT
+AZURE COST ANALYZER REPORT
 ============================================================
 
 📊 COST SUMMARY
@@ -208,7 +208,7 @@ Nov 01, 2025 (Sat)       $  116.06  ██████████████�
    Great job! Continue monitoring...
 ...
 ============================================================
-✓ Report saved to: reports/finops-assessment-2025-11-11T21-12-08.json
+✓ Report saved to: reports/cost-analysis-2025-11-11T21-12-08.json
 ============================================================
 ```
 
@@ -255,7 +255,7 @@ node dist/app.js
 
 The application will:
 1. Display a comprehensive report in the console
-2. Save a detailed JSON report to `reports/finops-assessment-YYYY-MM-DD-HH-mm-ss.json`
+2. Save a detailed JSON report to `reports/cost-analysis-YYYY-MM-DD-HH-mm-ss.json`
 
 ## Troubleshooting
 
@@ -298,7 +298,7 @@ On Windows, use Task Scheduler:
 ```powershell
 $Action = New-ScheduledTaskAction -Execute "node" -Argument "dist/app.js" -WorkingDirectory "C:\path\to\project"
 $Trigger = New-ScheduledTaskTrigger -Daily -At "6:00AM"
-Register-ScheduledTask -TaskName "Azure FinOps Assessment" -Action $Action -Trigger $Trigger
+Register-ScheduledTask -TaskName "Azure Cost Analyzer" -Action $Action -Trigger $Trigger
 ```
 
 On Linux/Mac, use cron:

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Setup Script for Azure FinOps Assessment PoC
+ * Setup Script for Azure Cost Analyzer
  * Helps validate configuration and environment
  */
 
@@ -10,7 +10,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 console.log('='.repeat(60));
-console.log('Azure FinOps Assessment - Setup Validator');
+console.log('Azure Cost Analyzer - Setup Validator');
 console.log('='.repeat(60));
 console.log('');
 
