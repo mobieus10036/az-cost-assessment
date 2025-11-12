@@ -8,9 +8,9 @@
 
 import { DefaultAzureCredential } from '@azure/identity';
 import { ComputeManagementClient } from '@azure/arm-compute';
-import { Recommendation, RecommendationSummary } from '../models/recommendation.js';
-import { configService } from '../utils/config.js';
-import { logInfo, logWarning } from '../utils/logger.js';
+import { Recommendation, RecommendationSummary } from '../models/recommendation';
+import { configService } from '../utils/config';
+import { logInfo, logWarning } from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 interface VMMetrics {

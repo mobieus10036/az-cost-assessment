@@ -48,17 +48,17 @@ class FinOpsAssessmentApp {
             // Step 1: Gather comprehensive cost analysis
             logInfo('Step 1: Gathering cost data...');
             const costAnalysis = await this.costService.getComprehensiveCostAnalysis();
-            logInfo(`Γ£ô Cost analysis complete\n`);
+            logInfo(`✓ Cost analysis complete\n`);
 
             // Step 2: Analyze cost trends
             logInfo('Step 2: Analyzing cost trends...');
             costAnalysis.trends = this.trendAnalyzer.analyzeTrends(costAnalysis);
-            logInfo(`Γ£ô Identified ${costAnalysis.trends.length} trends\n`);
+            logInfo(`✓ Identified ${costAnalysis.trends.length} trends\n`);
 
             // Step 3: Detect cost anomalies
             logInfo('Step 3: Detecting cost anomalies...');
             costAnalysis.anomalies = this.anomalyDetector.detectAnomalies(costAnalysis);
-            logInfo(`Γ£ô Detected ${costAnalysis.anomalies.length} anomalies\n`);
+            logInfo(`✓ Detected ${costAnalysis.anomalies.length} anomalies\n`);
 
             // Step 4: Get resource inventory
             logInfo('Step 4: Gathering resource inventory...');
@@ -97,7 +97,7 @@ class FinOpsAssessmentApp {
         console.log('='.repeat(60));
         
         // Summary Section
-        console.log('\n≡ƒôè COST SUMMARY');
+        console.log('\n💰 COST SUMMARY');
         console.log('-'.repeat(60));
         console.log(`Subscription ID: ${costAnalysis.subscriptionId}`);
         console.log(`Analysis Date:   ${new Date(costAnalysis.analysisDate).toLocaleString()}`);
@@ -119,7 +119,7 @@ class FinOpsAssessmentApp {
         console.log(`Peak Daily Spend:    ${costAnalysis.summary.peakDailySpend.toFixed(2)} ${costAnalysis.summary.currency}`);
 
         // Daily Spend for Past 14 Days
-        console.log('\n≡ƒôà DAILY SPEND (PAST 14 DAYS)');
+        console.log('\n📊 DAILY SPEND (PAST 14 DAYS)');
         console.log('-'.repeat(60));
         
         if (costAnalysis.historical.dailyCosts && costAnalysis.historical.dailyCosts.length > 0) {
@@ -132,7 +132,7 @@ class FinOpsAssessmentApp {
                 const dateStr = format(date, 'MMM dd, yyyy (EEE)');
                 const cost = dayData.cost.toFixed(2);
                 const barLength = Math.round((dayData.cost / maxDailyCost) * 30); // Max 30 chars
-                const bar = 'Γûê'.repeat(barLength);
+                const bar = '█'.repeat(barLength);
                 const padding = ' '.repeat(Math.max(0, 25 - dateStr.length));
                 
                 console.log(`${dateStr}${padding}$${cost.padStart(8)}  ${bar}`);
@@ -148,30 +148,30 @@ class FinOpsAssessmentApp {
         }
 
         // Month-over-Month Comparison
-        console.log('\n≡ƒôê MONTH-OVER-MONTH COMPARISON');
+        console.log('\n📈 MONTH-OVER-MONTH COMPARISON');
         console.log('-'.repeat(60));
         const comparison = costAnalysis.current.comparisonToPreviousMonth;
-        const changeSymbol = comparison.changePercent > 0 ? '≡ƒôê' : comparison.changePercent < 0 ? '≡ƒôë' : 'Γ₧í∩╕Å';
+        const changeSymbol = comparison.changePercent > 0 ? '↑' : comparison.changePercent < 0 ? '↓' : '→';
         console.log(`Previous Month:  ${comparison.previousMonthTotal.toFixed(2)} ${costAnalysis.summary.currency}`);
         console.log(`Current Month:   ${costAnalysis.current.monthToDateCost.toFixed(2)} ${costAnalysis.summary.currency}`);
         console.log(`Change:          ${changeSymbol} ${comparison.changeAmount > 0 ? '+' : ''}${comparison.changeAmount.toFixed(2)} (${comparison.changePercent > 0 ? '+' : ''}${comparison.changePercent.toFixed(1)}%)`);
 
         // Trends
         if (costAnalysis.trends.length > 0) {
-            console.log('\n≡ƒôë COST TRENDS');
+            console.log('\n📉 COST TRENDS');
             console.log('-'.repeat(60));
             costAnalysis.trends.forEach((trend: any) => {
-                const trendSymbol = trend.direction === 'increasing' ? '≡ƒôê' : trend.direction === 'decreasing' ? '≡ƒôë' : 'Γ₧í∩╕Å';
+                const trendSymbol = trend.direction === 'increasing' ? '↑' : trend.direction === 'decreasing' ? '↓' : '→';
                 console.log(`${trendSymbol} ${trend.period.toUpperCase()}: ${trend.direction} (${trend.changePercent > 0 ? '+' : ''}${trend.changePercent.toFixed(1)}%)`);
             });
         }
 
         // Anomalies
         if (costAnalysis.anomalies.length > 0) {
-            console.log('\nΓÜá∩╕Å  COST ANOMALIES DETECTED');
+            console.log('\n⚠️  COST ANOMALIES DETECTED');
             console.log('-'.repeat(60));
             costAnalysis.anomalies.slice(0, 5).forEach((anomaly: any) => {
-                const severityIcon = anomaly.severity === 'critical' ? '≡ƒö┤' : anomaly.severity === 'high' ? '≡ƒƒá' : anomaly.severity === 'medium' ? '≡ƒƒí' : '≡ƒƒó';
+                const severityIcon = anomaly.severity === 'critical' ? '🔴' : anomaly.severity === 'high' ? '🟠' : anomaly.severity === 'medium' ? '🟡' : '🟢';
                 console.log(`${severityIcon} [${anomaly.severity.toUpperCase()}] ${anomaly.description}`);
                 console.log(`   Date: ${anomaly.detectedDate.split('T')[0]}`);
             });
@@ -182,7 +182,7 @@ class FinOpsAssessmentApp {
 
         // Service Cost Breakdown
         if (costAnalysis.historical.costByService && costAnalysis.historical.costByService.length > 0) {
-            console.log('\n≡ƒÆ░ TOP EXPENSIVE SERVICES');
+            console.log('\n💵 TOP EXPENSIVE SERVICES');
             console.log('-'.repeat(60));
             
             // Sort services by cost (descending) and take top 10
@@ -191,7 +191,7 @@ class FinOpsAssessmentApp {
                 .slice(0, 10);
             
             topServices.forEach((service: any, index: number) => {
-                const bar = 'Γûê'.repeat(Math.round(service.percentageOfTotal / 2)); // Visual bar (50% = 25 chars)
+                const bar = '█'.repeat(Math.round(service.percentageOfTotal / 2)); // Visual bar (50% = 25 chars)
                 const padding = ' '.repeat(Math.max(0, 35 - service.serviceName.length));
                 console.log(`${index + 1}. ${service.serviceName}${padding}${service.cost.toFixed(2)} ${service.currency} (${service.percentageOfTotal.toFixed(1)}%)`);
                 console.log(`   ${bar}`);
@@ -206,7 +206,7 @@ class FinOpsAssessmentApp {
                 return acc;
             }, {});
 
-            console.log('\n≡ƒôè Cost by Category:');
+            console.log('\n💰 Cost by Category:');
             Object.entries(categoryTotals)
                 .sort(([, a]: any, [, b]: any) => b - a)
                 .forEach(([category, cost]: any) => {
@@ -286,7 +286,7 @@ class FinOpsAssessmentApp {
         }
 
         // Recommendations Section
-        console.log('\n≡ƒÆí RECOMMENDATIONS');
+        console.log('\n💡 RECOMMENDATIONS');
         console.log('-'.repeat(60));
         
         const recommendations = this.generateRecommendations(costAnalysis, resourceSummary);
@@ -294,7 +294,7 @@ class FinOpsAssessmentApp {
             console.log(`${index + 1}. ${rec.icon} ${rec.title}`);
             console.log(`   ${rec.description}`);
             if (rec.potentialSavings) {
-                console.log(`   ≡ƒÆ░ Potential Savings: ${rec.potentialSavings}`);
+                console.log(`   💵 Potential Savings: ${rec.potentialSavings}`);
             }
             console.log('');
         });
@@ -321,23 +321,23 @@ class FinOpsAssessmentApp {
             const savingsEstimate = (topService.cost * 0.2).toFixed(2); // Assume 20% optimization potential
             
             let description = '';
-            let icon = '≡ƒôè';
+            let icon = '💰';
             
             if (topService.serviceName.toLowerCase().includes('storage')) {
                 description = 'Review storage lifecycle policies, delete unused blobs, and move cold data to Archive tier.';
-                icon = '≡ƒÆ╛';
+                icon = '📦';
             } else if (topService.serviceName.toLowerCase().includes('virtual machine')) {
                 description = 'Consider Reserved Instances for consistent workloads, right-size underutilized VMs, and use auto-shutdown for dev/test.';
-                icon = '≡ƒûÑ∩╕Å';
+                icon = '🖥️';
             } else if (topService.serviceName.toLowerCase().includes('database') || topService.serviceName.toLowerCase().includes('sql')) {
                 description = 'Review DTU/vCore sizing, consider serverless tier for variable workloads, and optimize query performance.';
-                icon = '≡ƒùä∩╕Å';
+                icon = '🗄️';
             } else if (topService.serviceName.toLowerCase().includes('backup')) {
                 description = 'Review backup retention policies, remove backups for deleted resources, and adjust backup frequency.';
-                icon = '≡ƒÆ╝';
+                icon = '💾';
             } else if (topService.serviceName.toLowerCase().includes('bastion')) {
                 description = 'Consider scheduled auto-shutdown for non-production hours or explore alternative remote access solutions.';
-                icon = '≡ƒöÉ';
+                icon = '🔒';
             } else {
                 description = `Review usage patterns and explore optimization opportunities for ${topService.serviceName}.`;
             }
@@ -358,7 +358,7 @@ class FinOpsAssessmentApp {
             
             if (highAnomalies > 0) {
                 recommendations.push({
-                    icon: 'ΓÜá∩╕Å',
+                    icon: '⚠️',
                     title: `Investigate ${highAnomalies} High-Priority Cost Anomalies`,
                     description: 'Review unusual spending spikes to identify misconfigurations, runaway processes, or unexpected usage patterns.'
                 });
@@ -369,14 +369,14 @@ class FinOpsAssessmentApp {
         const comparison = costAnalysis.current.comparisonToPreviousMonth;
         if (comparison.changePercent > 20) {
             recommendations.push({
-                icon: '≡ƒôê',
+                icon: '📈',
                 title: `Cost Increase Alert: +${comparison.changePercent.toFixed(1)}% Month-over-Month`,
                 description: 'Significant cost increase detected. Review new resource deployments and usage changes.',
                 potentialSavings: `Address to prevent +$${Math.abs(comparison.changeAmount).toFixed(2)} monthly increase`
             });
         } else if (comparison.changePercent < -20) {
             recommendations.push({
-                icon: 'Γ£à',
+                icon: '✅',
                 title: `Cost Optimization Success: ${comparison.changePercent.toFixed(1)}% Reduction`,
                 description: 'Great job! Continue monitoring to ensure savings are sustained and explore similar optimizations for other services.'
             });
@@ -392,7 +392,7 @@ class FinOpsAssessmentApp {
             const reservationSavings = (computeCost.cost * 0.30).toFixed(2); // 30% typical RI savings
             
             recommendations.push({
-                icon: '≡ƒÆÄ',
+                icon: '🎫',
                 title: 'Consider Reserved Instances/Capacity',
                 description: 'For consistent compute workloads, Reserved Instances can save 30-72% compared to pay-as-you-go.',
                 potentialSavings: `~$${reservationSavings} USD/90 days`
@@ -402,7 +402,7 @@ class FinOpsAssessmentApp {
         // Recommendation 5: Unused resources cleanup
         if (resourceSummary.totalResources > 100) {
             recommendations.push({
-                icon: '≡ƒº╣',
+                icon: '🧹',
                 title: 'Clean Up Unused Resources',
                 description: 'Review unattached disks, unused NICs, orphaned snapshots, and idle resources. Use Azure Advisor for recommendations.',
                 potentialSavings: 'Typically 5-10% of total costs'
@@ -411,7 +411,7 @@ class FinOpsAssessmentApp {
 
         // Recommendation 6: Tagging and cost allocation
         recommendations.push({
-            icon: '≡ƒÅ╖∩╕Å',
+            icon: '🏷️',
             title: 'Implement Cost Allocation Tags',
             description: 'Tag resources by department, project, or environment to enable detailed cost tracking and chargeback.',
         });
@@ -419,7 +419,7 @@ class FinOpsAssessmentApp {
         // Recommendation 7: Budget alerts
         const avgMonthlyCost = costAnalysis.summary.avgDailySpend * 30;
         recommendations.push({
-            icon: '≡ƒöö',
+            icon: '🔔',
             title: 'Set Up Budget Alerts',
             description: `Create budget alerts at $${(avgMonthlyCost * 0.8).toFixed(2)}, $${avgMonthlyCost.toFixed(2)}, and $${(avgMonthlyCost * 1.2).toFixed(2)} to catch unexpected spending.`,
         });
