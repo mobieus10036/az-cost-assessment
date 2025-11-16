@@ -10,7 +10,6 @@ import { AzureResourceService } from './services/azureResourceService';
 import { CostTrendAnalyzer } from './analyzers/costTrendAnalyzer';
 import { AnomalyDetector } from './analyzers/anomalyDetector';
 import { SmartRecommendationAnalyzer } from './analyzers/smartRecommendationAnalyzer';
-import { PDFGeneratorService } from './services/pdfGenerator';
 import { HtmlReportGenerator } from './services/htmlReportGenerator';
 import { logInfo, logError } from './utils/logger';
 import { configService } from './utils/config';
@@ -26,7 +25,6 @@ class FinOpsAssessmentApp {
     private trendAnalyzer: CostTrendAnalyzer;
     private anomalyDetector: AnomalyDetector;
     private smartRecommendations: SmartRecommendationAnalyzer;
-    private pdfGenerator: PDFGeneratorService;
     private htmlGenerator: HtmlReportGenerator;
 
     constructor() {
@@ -40,7 +38,6 @@ class FinOpsAssessmentApp {
         this.trendAnalyzer = new CostTrendAnalyzer();
         this.anomalyDetector = new AnomalyDetector();
         this.smartRecommendations = new SmartRecommendationAnalyzer();
-        this.pdfGenerator = new PDFGeneratorService();
         this.htmlGenerator = new HtmlReportGenerator();
 
         logInfo('All services initialized successfully');
@@ -480,13 +477,6 @@ class FinOpsAssessmentApp {
 
             fs.writeFileSync(jsonFilepath, JSON.stringify(report, null, 2));
             logInfo(`\n${colors.success('[OK]')} JSON report saved to: ${jsonFilepath}`);
-
-            // Generate PDF report
-            const pdfFilename = `finops-assessment-${timestamp}.pdf`;
-            const pdfFilepath = path.join(outputDir, pdfFilename);
-            
-            await this.pdfGenerator.generatePDF(costAnalysis, recommendationSummary, pdfFilepath);
-            logInfo(`${colors.success('[OK]')} PDF report saved to: ${pdfFilepath}`);
 
             // Generate HTML report
             const htmlFilename = `finops-assessment-${timestamp}.html`;

@@ -44,12 +44,10 @@
     "@azure/data-tables": "^13.3.0",
     "@azure/identity": "^4.5.0",
     "@azure/storage-blob": "^12.25.0",
-    "@types/pdfkit": "^0.17.3",
     "chalk": "^4.1.2",
     "config": "^3.3.12",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",
-    "pdfkit": "^0.17.2",
     "uuid": "^13.0.0",
     "winston": "^3.15.0"
   },
