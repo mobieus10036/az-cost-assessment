@@ -13,6 +13,7 @@ import { SmartRecommendationAnalyzer } from './analyzers/smartRecommendationAnal
 import { PDFGeneratorService } from './services/pdfGenerator';
 import { logInfo, logError } from './utils/logger';
 import { configService } from './utils/config';
+import { InteractiveSetup } from './utils/interactiveSetup';
 import { format } from 'date-fns';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -493,6 +494,35 @@ class FinOpsAssessmentApp {
 // Main execution
 async function main() {
     try {
+        // Check if configuration is valid
+        const envPath = path.join(process.cwd(), '.env');
+        const envExists = fs.existsSync(envPath);
+
+        let configValid = false;
+        try {
+            configService.validateRequired();
+            configValid = true;
+        } catch (error) {
+            configValid = false;
+        }
+
+        // Run interactive setup if config is missing or invalid
+        if (!envExists || !configValid) {
+            console.log('⚠️  Configuration not found or incomplete.\n');
+            const setup = new InteractiveSetup();
+            const setupSuccess = await setup.run();
+
+            if (!setupSuccess) {
+                console.log('\n❌ Setup failed. Please try again.');
+                process.exit(1);
+            }
+
+            console.log('\nStarting cost analysis...\n');
+            
+            // Reload environment variables after setup
+            require('dotenv').config({ override: true });
+        }
+
         const app = new FinOpsAssessmentApp();
         await app.run();
         process.exit(0);

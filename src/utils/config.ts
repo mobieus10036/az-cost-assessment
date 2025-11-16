@@ -94,6 +94,11 @@ class ConfigService {
     }
 
     private validate(): void {
+        // Don't validate during construction - let app.ts handle missing config
+        // This allows interactive setup to run
+    }
+
+    public validateRequired(): void {
         const errors: string[] = [];
 
         if (!this.appConfig.azure.subscriptionId) {

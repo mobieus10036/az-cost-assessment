@@ -29,11 +29,11 @@
   "homepage": "https://github.com/mobieus10036/azure-cost-analyzer#readme",
   "scripts": {
     "start": "ts-node src/app.ts",
+    "setup": "ts-node src/utils/interactiveSetup.ts",
     "test": "jest",
     "build": "tsc",
     "dev": "ts-node-dev --respawn src/app.ts",
-    "validate": "node scripts/validate-setup.js",
-    "setup": "npm install && node scripts/validate-setup.js"
+    "validate": "node scripts/validate-setup.js"
   },
   "dependencies": {
     "@azure/arm-compute": "^23.1.0",
@@ -67,6 +67,5 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node"
-  },
-  "license": "MIT"
+  }
 }
