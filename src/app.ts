@@ -11,6 +11,7 @@ import { CostTrendAnalyzer } from './analyzers/costTrendAnalyzer';
 import { AnomalyDetector } from './analyzers/anomalyDetector';
 import { SmartRecommendationAnalyzer } from './analyzers/smartRecommendationAnalyzer';
 import { PDFGeneratorService } from './services/pdfGenerator';
+import { HtmlReportGenerator } from './services/htmlReportGenerator';
 import { logInfo, logError } from './utils/logger';
 import { configService } from './utils/config';
 import { InteractiveSetup } from './utils/interactiveSetup';
@@ -26,6 +27,7 @@ class FinOpsAssessmentApp {
     private anomalyDetector: AnomalyDetector;
     private smartRecommendations: SmartRecommendationAnalyzer;
     private pdfGenerator: PDFGeneratorService;
+    private htmlGenerator: HtmlReportGenerator;
 
     constructor() {
         logInfo('='.repeat(60));
@@ -39,6 +41,7 @@ class FinOpsAssessmentApp {
         this.anomalyDetector = new AnomalyDetector();
         this.smartRecommendations = new SmartRecommendationAnalyzer();
         this.pdfGenerator = new PDFGeneratorService();
+        this.htmlGenerator = new HtmlReportGenerator();
 
         logInfo('All services initialized successfully');
     }
@@ -484,6 +487,19 @@ class FinOpsAssessmentApp {
             
             await this.pdfGenerator.generatePDF(costAnalysis, recommendationSummary, pdfFilepath);
             logInfo(`${colors.success('[OK]')} PDF report saved to: ${pdfFilepath}`);
+
+            // Generate HTML report
+            const htmlFilename = `finops-assessment-${timestamp}.html`;
+            const htmlFilepath = path.join(outputDir, htmlFilename);
+            
+            const htmlContent = this.htmlGenerator.generate(
+                costAnalysis,
+                recommendations,
+                recommendationSummary
+            );
+            
+            fs.writeFileSync(htmlFilepath, htmlContent, 'utf-8');
+            logInfo(`${colors.success('[OK]')} HTML report saved to: ${htmlFilepath}`);
             
         } catch (error) {
             logError(`Error saving results: ${error}`);
