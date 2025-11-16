@@ -4,13 +4,6 @@
     "tenantId": "",
     "scope": ""
   },
-  "storage": {
-    "accountName": "",
-    "subscriptionId": "",
-    "containerName": "finops-reports",
-    "tableName": "FinOpsCostData",
-    "useStorage": false
-  },
   "analysis": {
     "historicalDays": 90,
     "forecastDays": 30,

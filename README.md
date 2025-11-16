@@ -1,6 +1,6 @@
 # Azure Cost Analyzer
 
-A tool I built to track my Azure spending and find ways to save money. It pulls cost data from Azure, analyzes it, and generates reports.
+A simple command-line tool to track Azure spending and find ways to save money. Runs locally with **no Azure Storage dependencies** - just pulls cost data, analyzes it, and generates reports on your machine.
 
 ## What It Does
 
@@ -9,20 +9,20 @@ A tool I built to track my Azure spending and find ways to save money. It pulls 
 - Compares costs across 3 months (so you can see trends without the partial-month confusion)
 - Finds unusual spending spikes
 - Suggests ways to save money (like removing stopped VMs)
-- Creates both text reports and PDFs
+- Creates both console reports and PDFs locally
 
 ## Why I Built This
 
-I was tired of manually checking the Azure portal every day to see what we were spending. I wanted something I could run from the command line that would give me the full picture. Plus, I wanted to learn more about TypeScript and working with Azure APIs.
+I was tired of manually checking the Azure portal every day to see what we were spending. I wanted something I could run from the command line that would give me the full picture - without needing to set up storage accounts or other Azure infrastructure.
 
 This project was built mostly with help from GitHub Copilot and lots of trial and error. I'm sharing it in case it's useful to others learning Azure or looking for a simple cost tracking solution.
 
 ## Important Security Note
 
-This tool reads real cost data from your Azure subscription. The reports it creates will contain your subscription IDs, resource names, and actual costs. 
+This tool reads real cost data from your Azure subscription. The reports it creates will contain your subscription IDs, resource names, and actual costs.
 
 - Don't commit your `.env` file (it's already in .gitignore)
-- The reports folder is also gitignored by default
+- Reports are saved locally in the `reports/` folder (also gitignored)
 - Be careful what you share publicly
 
 ## How It Works
@@ -39,59 +39,66 @@ It's written in TypeScript and uses official Azure SDKs. The whole process takes
 
 ## What You Need
 
-- Node.js 18 or newer
-- An Azure subscription
-- Azure CLI installed and logged in
-- The "Cost Management Reader" role on your subscription (or Contributor/Owner)
+- **Node.js 18+** - To run the tool
+- **Azure subscription** - To analyze
+- **Azure CLI** - For authentication (`az login`)
+- **Cost Management Reader role** - Or Owner/Contributor on your subscription
 
-## Setup
+That's it! No Azure Storage, no Cosmos DB, no other infrastructure needed.
 
-1. Clone this repo:
+## Quick Start
+
+1. **Clone and install:**
 ```bash
 git clone https://github.com/mobieus10036/azure-cost-analyzer.git
 cd azure-cost-analyzer
-```
-
-2. Install dependencies:
-```bash
 npm install
 ```
 
-3. Copy the example env file and add your subscription ID:
+2. **Configure your subscription:**
 ```bash
 cp .env.example .env
 ```
 
-Edit the `.env` file and add your Azure subscription ID. You can get it with:
+Edit `.env` and add:
 ```bash
-az account show --query id -o tsv
+AZURE_SUBSCRIPTION_ID=your-subscription-id
+AZURE_TENANT_ID=your-tenant-id
 ```
 
-4. Make sure you're logged into Azure:
+Get these values with:
+```bash
+az account show
+```
+
+3. **Login to Azure:**
 ```bash
 az login
 az account set --subscription "your-subscription-id"
 ```
 
-5. Run it:
+4. **Run it:**
 ```bash
 npm start
 ```
 
-The first run takes about 2 minutes. Reports are saved to the `reports/` folder.
+The analysis takes about 2 minutes. Reports are saved locally to `reports/` folder.
 
 ## What You Get
 
-The tool shows you:
+The tool generates:
+- **Console output** - Formatted report with colors and charts
+- **JSON report** - Saved to `reports/cost-analysis-YYYY-MM-DD.json`
+- **PDF report** - Visual summary you can share
+
+Reports include:
 - Total costs for the past 90 days
 - Daily spending for the past 2 weeks
 - Month-over-month comparison (last 3 months)
 - Cost trends (going up or down?)
-- Any unusual spending patterns
-- Your top 10 most expensive services
-- Recommendations for saving money
-
-Everything prints to the console with colors, and you also get a PDF report you can share.
+- Anomaly detection (unusual spending patterns)
+- Top 10 most expensive services
+- Smart recommendations for saving money
 
 ## Example Output
 
@@ -133,19 +140,19 @@ The PDF report has all this data plus some charts and recommendations.
 
 ## Configuration
 
-You can change settings in `config/default.json`:
+Adjust settings in `config/default.json`:
 
 ```json
 {
   "analysis": {
-    "historicalDays": 90,
-    "forecastDays": 30,
-    "anomalyThresholdPercent": 20
+    "historicalDays": 90,      // Days of history to analyze
+    "forecastDays": 30,         // Days to forecast
+    "anomalyThresholdPercent": 20  // Sensitivity for anomaly detection
   }
 }
 ```
 
-I set these defaults based on what I found useful, but you can adjust them. For example, if you want to look back 6 months instead of 3, change `historicalDays` to 180.
+For example, to analyze 6 months of history, change `historicalDays` to 180.
 
 ## Permissions
 

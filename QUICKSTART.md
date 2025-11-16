@@ -1,15 +1,17 @@
 # Quick Start Guide - Azure Cost Analyzer
 
-Get your Azure cost analysis running in 5 minutes!
+Get your Azure cost analysis running in 5 minutes! **No Azure Storage or other infrastructure needed.**
 
 ## Prerequisites
 
 Before starting, ensure you have:
 
-- ✅ **Node.js 16+** installed ([download](https://nodejs.org/))
+- ✅ **Node.js 18+** installed ([download](https://nodejs.org/))
 - ✅ **Azure CLI** installed ([install guide](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli))
 - ✅ **Azure subscription** with active resources
 - ✅ **Permissions**: Cost Management Reader (or Owner/Contributor) role
+
+That's all! The tool runs entirely locally and just reads cost data from Azure.
 
 ## Installation Steps
 
@@ -27,15 +29,13 @@ npm install
 ```
 
 This installs:
-- Azure SDKs (@azure/identity, @azure/arm-costmanagement, @azure/arm-resources)
-- Configuration libraries (config, dotenv)
-- Logging (winston)
-- Date utilities (date-fns)
+
+- Azure SDKs for Cost Management and Resource APIs
 - TypeScript and development tools
+- PDF generation libraries
+- Logging and utilities
 
 ### 3. Set Up Azure Authentication
-
-#### Option A: Azure CLI (Recommended for local development)
 
 ```bash
 # Login to Azure
@@ -51,119 +51,71 @@ az account set --subscription "your-subscription-id-or-name"
 az account show
 ```
 
-#### Option B: Service Principal (For automation/CI/CD)
-
-```bash
-# Create service principal with Cost Management Reader role
-az ad sp create-for-rbac \
-  --name "finops-assessment-sp" \
-  --role "Cost Management Reader" \
-  --scopes /subscriptions/YOUR_SUBSCRIPTION_ID
-
-# Output will show:
-# {
-#   "appId": "xxx",
-#   "displayName": "finops-assessment-sp",
-#   "password": "xxx",
-#   "tenant": "xxx"
-# }
-
-# Add these to your .env file as:
-# AZURE_CLIENT_ID=appId
-# AZURE_CLIENT_SECRET=password
-# AZURE_TENANT_ID=tenant
-```
-
 ### 4. Configure Environment Variables
 
 ```bash
 # Copy the example file
 cp .env.example .env
 
-# Edit the file with your subscription details
-# Windows:
-notepad .env
-
-# Mac/Linux:
-nano .env
-# or
-vim .env
+# Edit with your subscription details
 ```
 
 **Required variables in `.env`:**
 
 ```bash
-# Your Azure Tenant ID
+# Your Azure Tenant ID and Subscription ID
 AZURE_TENANT_ID=your-tenant-id-here
-
-# Subscription to analyze costs FROM (usually your production subscription)
 AZURE_SUBSCRIPTION_ID=your-subscription-id-here
-
-# Optional: Storage account for report persistence (in any subscription)
-AZURE_STORAGE_ACCOUNT_NAME=yourstorageaccount
-AZURE_STORAGE_SUBSCRIPTION_ID=storage-subscription-id-here
 ```
 
-**Quick tips to get these values:**
+**Get these values:**
 
 ```bash
-# Get your tenant ID
-az account show --query tenantId -o tsv
-
-# Get your subscription ID
-az account show --query id -o tsv
-
-# Get subscription name
-az account show --query name -o tsv
+az account show
 ```
 
-### 5. Verify Cost Management Permissions
+### 5. Verify Permissions
+
+You need **Cost Management Reader** role on your subscription.
 
 ```bash
-# Check if you have the required permissions
+# Check your permissions
 az role assignment list \
   --assignee $(az account show --query user.name -o tsv) \
-  --subscription $(az account show --query id -o tsv) \
-  --query "[?contains(roleDefinitionName, 'Cost') || contains(roleDefinitionName, 'Owner') || contains(roleDefinitionName, 'Contributor')].{Role:roleDefinitionName, Scope:scope}" \
+  --query "[?contains(roleDefinitionName, 'Cost')].roleDefinitionName" \
   --output table
 ```
 
-**If you don't have Cost Management Reader role:**
+If you don't have the role, ask an admin to grant it:
 
 ```bash
-# Request the role (requires Owner or User Access Administrator permissions)
 az role assignment create \
   --assignee your-email@domain.com \
   --role "Cost Management Reader" \
   --scope "/subscriptions/your-subscription-id"
 ```
 
-### 6. Run Your First Assessment
+### 6. Run Your First Analysis
 
 ```bash
 npm start
 ```
 
-⏱️ **Expected Duration:** Approximately 2 minutes
+⏱️ **Takes about 2 minutes** - This ensures reliable data with no API rate limiting.
 
-The assessment takes ~2 minutes to complete intentionally. This ensures:
-- ✅ Zero rate limiting from Azure Cost Management API
-- ✅ 100% real data with no fallbacks to mock data
-- ✅ Sequential API calls with proper delays
-- ✅ Reliable, accurate cost analysis
+**What happens:**
 
-**What happens during execution:**
-1. ✅ Connects to Azure subscription (3-5 seconds)
-2. ✅ Queries 90-day historical costs (15-20 seconds)
-3. ✅ Retrieves current month data (15-20 seconds)
-4. ✅ Fetches previous month for comparison (15-20 seconds)
-5. ✅ Generates 30-day forecast (15-20 seconds)
-6. ✅ Analyzes trends and detects anomalies (2-3 seconds)
-7. ✅ Inventories resources (1-2 seconds)
-8. ✅ Generates recommendations (1 second)
-9. ✅ Saves JSON report to `reports/` (1 second)
+1. Connects to Azure subscription
+2. Queries 90 days of historical costs
+3. Retrieves current month data
+4. Fetches previous month for comparison
+5. Generates 30-day forecast
+6. Analyzes trends and detects anomalies
+7. Checks for resource optimization opportunities
+8. Generates recommendations
+9. Saves reports locally to `reports/` folder
 
-## Expected Output
+## What You'll See
 
 You'll see a comprehensive report like this:
 
@@ -271,92 +223,70 @@ The application will:
 - Verify your subscription: `az account show`
 - Check your permissions: You need "Cost Management Reader" and "Reader" roles
 
-### Issue: "Using mock data for cost query"
-**Note**: This is expected in the PoC. The warning indicates the app is using generated sample data for demonstration. To use real data, implement the actual Azure Cost Management API calls in `azureCostManagementService.ts`.
-
 ## Next Steps
 
-1. **Review the Generated Report**: Check the console output and JSON file in `reports/`
-2. **Analyze Anomalies**: Look for cost spikes or unusual patterns
-3. **Review Trends**: Understand if costs are increasing, decreasing, or stable
-4. **Check Resource Inventory**: See what resources are consuming the most
-5. **Plan Actions**: Use insights to optimize your Azure spending
+1. **Review the Report** - Check the console output and files in `reports/`
+2. **Analyze Anomalies** - Look for cost spikes or unusual patterns
+3. **Review Trends** - Understand if costs are increasing or decreasing
+4. **Check Recommendations** - Review suggested optimizations
+5. **Take Action** - Implement cost-saving recommendations
 
-## Advanced Configuration
+## Configuration Options
 
-### Analyze a Specific Resource Group
+Edit `config/default.json` to customize:
 
-Set the scope in your `.env` or `config/default.json`:
-
-```bash
-AZURE_SCOPE="/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/YOUR_RESOURCE_GROUP"
-```
-
-### Schedule Regular Assessments
-
-On Windows, use Task Scheduler:
-```powershell
-$Action = New-ScheduledTaskAction -Execute "node" -Argument "dist/app.js" -WorkingDirectory "C:\path\to\project"
-$Trigger = New-ScheduledTaskTrigger -Daily -At "6:00AM"
-Register-ScheduledTask -TaskName "Azure Cost Analyzer" -Action $Action -Trigger $Trigger
-```
-
-On Linux/Mac, use cron:
-```bash
-0 6 * * * cd /path/to/project && node dist/app.js >> logs/cron.log 2>&1
-```
-
-### Export to Excel/CSV
-
-The JSON reports can be imported into Excel for further analysis:
-1. Open Excel
-2. Data > Get Data > From JSON
-3. Select your report file from `reports/`
-4. Use Power Query to transform and visualize
-
-## Getting Real Azure Cost Data
-
-To replace mock data with actual Azure API calls, update `azureCostManagementService.ts`:
-
-1. Use the [Cost Details API](https://learn.microsoft.com/en-us/rest/api/cost-management/generate-cost-details-report)
-2. Or use [Exports API](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports) for large datasets
-
-Example API call structure:
-```typescript
-const queryDefinition = {
-  type: "ActualCost",
-  timeframe: "Custom",
-  timePeriod: {
-    from: startDate,
-    to: endDate
-  },
-  dataset: {
-    granularity: "Daily",
-    aggregation: {
-      totalCost: {
-        name: "Cost",
-        function: "Sum"
-      }
-    },
-    grouping: [
-      {
-        type: "Dimension",
-        name: "ServiceName"
-      }
-    ]
+```json
+{
+  "analysis": {
+    "historicalDays": 90,           // Days of history to analyze
+    "forecastDays": 30,              // Days to forecast
+    "anomalyThresholdPercent": 20    // Anomaly detection sensitivity
   }
-};
-
-const result = await client.query.usage(scope, queryDefinition);
+}
 ```
 
-## Support
+## Troubleshooting
 
-For issues or questions:
-1. Check the [Azure Cost Management documentation](https://learn.microsoft.com/en-us/azure/cost-management-billing/)
-2. Review [Azure SDK for JavaScript docs](https://learn.microsoft.com/en-us/javascript/api/overview/azure/)
-3. Consult the main README.md file
+### "Cannot find module" errors
+
+Run `npm install` to install dependencies.
+
+### "AZURE_SUBSCRIPTION_ID is required"
+
+Make sure your `.env` file exists and contains:
+
+```bash
+AZURE_SUBSCRIPTION_ID=your-subscription-id
+AZURE_TENANT_ID=your-tenant-id
+```
+
+### "Authentication failed"
+
+```bash
+# Re-login to Azure
+az login
+
+# Verify your subscription
+az account show
+```
+
+### Missing permissions
+
+You need the **Cost Management Reader** role:
+
+```bash
+az role assignment create \
+  --assignee your-email@domain.com \
+  --role "Cost Management Reader" \
+  --scope "/subscriptions/your-subscription-id"
+```
+
+## That's It!
+
+Your cost analyzer is now running locally with **zero Azure infrastructure dependencies**. Reports are saved to the `reports/` folder.
+
+For more details, see the main [README.md](README.md).
 
 ---
 
-Happy optimizing! 💰📊
+**Happy cost optimizing!** 💰📊
