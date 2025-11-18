@@ -2,9 +2,9 @@
 
 ## Current Status: Mock Data
 
-⚠️ **IMPORTANT**: The application currently uses **mock/fake data** for demonstration purposes.
+**IMPORTANT**: The application currently uses mock/fake data for demonstration purposes.
 
-The services you see in the reports (Virtual Machines, Azure Kubernetes Service, Azure SQL Database, etc.) are **NOT** from your actual Azure subscription. They are hardcoded sample data to demonstrate what the reporting would look like.
+The services you see in the reports (Virtual Machines, Azure Kubernetes Service, Azure SQL Database, etc.) are NOT from your actual Azure subscription. They are hardcoded sample data to demonstrate what the reporting would look like.
 
 ## Why Mock Data?
 

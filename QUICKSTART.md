@@ -4,9 +4,6 @@ Get your Azure cost analysis running in **under 2 minutes**! No manual configura
 
 ## Prerequisites
 
-- ✅ **Node.js 18+** installed ([download](https://nodejs.org/))
-- ✅ **Azure CLI** installed ([install guide](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli))
-- ✅ **Azure subscription** with active resources
 
 That's it! The tool will guide you through the rest interactively.
 

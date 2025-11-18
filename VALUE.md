@@ -2,7 +2,7 @@
 
 ## What Makes This Tool Valuable for Azure Engineers?
 
-### 🎯 Programmatic Cost Intelligence
+### Programmatic Cost Intelligence
 
 Unlike manual Azure portal reviews, this tool provides **automated, comprehensive cost analysis** that can be:
 - Run on-demand or scheduled
@@ -10,34 +10,34 @@ Unlike manual Azure portal reviews, this tool provides **automated, comprehensiv
 - Customized for specific needs
 - Exported for reporting to stakeholders
 
-### 💡 Key Value Propositions
+### Key Value Propositions
 
-#### 1. **Time Savings**
-- **Manual approach**: 2-4 hours/week reviewing cost dashboards
-- **Automated approach**: 2-5 minutes to run complete assessment
-- **ROI**: ~95% time reduction for cost analysis
+#### 1. Time Savings
+- Manual approach: 2-4 hours/week reviewing cost dashboards
+- Automated approach: 2-5 minutes to run complete assessment
+- ROI: ~95% time reduction for cost analysis
 
-#### 2. **Proactive Cost Management**
+#### 2. Proactive Cost Management
 Instead of discovering cost overruns at month-end:
-- **Detect anomalies** within hours of occurrence
-- **Forecast spending** before bills arrive
-- **Identify trends** before they become problems
-- **Track patterns** across multiple dimensions
+- Detect anomalies within hours of occurrence
+- Forecast spending before bills arrive
+- Identify trends before they become problems
+- Track patterns across multiple dimensions
 
-#### 3. **Data-Driven Decisions**
+#### 3. Data-Driven Decisions
 Replace gut-feel with statistics:
 - Historical trends with percentage changes
 - Anomaly detection using Z-scores
 - Confidence intervals for forecasts
 - Statistical analysis of spending patterns
 
-#### 4. **Audit Trail & Accountability**
+#### 4. Audit Trail & Accountability
 - JSON reports with timestamps
 - Complete spending breakdown by service/resource
 - Historical records for trend analysis
 - Shareable reports for management
 
-### 📊 What You Get in Each Assessment
+### What You Get in Each Assessment
 
 #### Historical Analysis (Configurable Period)
 ```
