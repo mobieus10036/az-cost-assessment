@@ -1,4 +1,4 @@
-# Smart Recommendations Implementation Summary
+# Smart Recommendations Implementation Summary (AZ Cost Assessment)
 
 ## ✅ What Has Been Completed
 

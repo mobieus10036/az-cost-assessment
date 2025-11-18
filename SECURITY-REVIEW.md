@@ -1,4 +1,4 @@
-# Code Review Summary - Azure Cost Analyzer
+# Code Review Summary - AZ Cost Assessment
 
 **Review Date**: November 12, 2025  
 **Status**: ✅ **READY FOR PUBLIC SHARING**

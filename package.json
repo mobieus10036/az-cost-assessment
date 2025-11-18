@@ -1,5 +1,5 @@
 {
-  "name": "azure-cost-analyzer",
+  "name": "az-cost-assessment",
   "version": "1.0.0",
   "description": "A simple local-first Azure cost analysis tool for tracking spending, identifying trends, and optimizing cloud costs. No Azure Storage dependencies required.",
   "main": "src/app.ts",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mobieus10036/azure-cost-analyzer.git"
+    "url": "https://github.com/mobieus10036/az-cost-assessment.git"
   },
   "keywords": [
     "azure",
@@ -24,9 +24,9 @@
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mobieus10036/azure-cost-analyzer/issues"
+    "url": "https://github.com/mobieus10036/az-cost-assessment/issues"
   },
-  "homepage": "https://github.com/mobieus10036/azure-cost-analyzer#readme",
+  "homepage": "https://github.com/mobieus10036/az-cost-assessment#readme",
   "scripts": {
     "start": "ts-node src/app.ts",
     "setup": "ts-node src/utils/interactiveSetup.ts",

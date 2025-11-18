@@ -1,4 +1,4 @@
-# Value Proposition: Azure Cost Analyzer
+# Value Proposition: AZ Cost Assessment
 
 ## What Makes This Tool Valuable for Azure Engineers?
 

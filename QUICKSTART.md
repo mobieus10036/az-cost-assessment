@@ -1,4 +1,4 @@
-# Quick Start Guide - Azure Cost Analyzer
+# Quick Start Guide - AZ Cost Assessment
 
 Get your Azure cost analysis running in **under 2 minutes**! No manual configuration needed.
 
@@ -15,8 +15,8 @@ That's it! The tool will guide you through the rest interactively.
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/mobieus10036/azure-cost-analyzer.git
-cd azure-cost-analyzer
+git clone https://github.com/mobieus10036/az-cost-assessment.git
+cd az-cost-assessment
 npm install
 ```
 

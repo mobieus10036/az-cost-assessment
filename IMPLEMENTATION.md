@@ -166,9 +166,6 @@ You should now see your **actual** Azure services and their costs!
 
 ## API Documentation
 
-- [Azure Cost Management Query API](https://learn.microsoft.com/en-us/rest/api/cost-management/query/usage)
-- [Azure Cost Management SDK for JavaScript](https://learn.microsoft.com/en-us/javascript/api/overview/azure/arm-costmanagement-readme)
-- [Cost Management Best Practices](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/cost-analysis-common-uses)
 
 ## What You'll Get with Real Data
 
@@ -179,7 +176,7 @@ You should now see your **actual** Azure services and their costs!
 ✅ Resource-level detail (optional with additional grouping)  
 ✅ Historical trends based on actual usage  
 
-## Current Mock Data Distribution
+ https://github.com/mobieus10036/az-network-assessment
 
 For reference, the mock data simulates:
 - 35% Virtual Machines

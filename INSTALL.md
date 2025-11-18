@@ -1,6 +1,6 @@
 # Installation & Setup Instructions
 
-Simple step-by-step guide to get the Azure Cost Analyzer running locally. **No Azure Storage or other infrastructure needed.**
+Simple step-by-step guide to get the AZ Cost Assessment running locally. **No Azure Storage or other infrastructure needed.**
 
 ## Step-by-Step Setup
 
