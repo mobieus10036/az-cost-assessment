@@ -591,6 +591,40 @@ tbody tr:hover {
 <body>
     <div class="container">
         ${this.generateHeader(analysis, generatedAt)}
+        <div style="margin: 24px 0 16px 0;">
+            <input type="text" id="report-search" placeholder="Search report..." style="width: 100%; max-width: 400px; padding: 8px 12px; font-size: 15px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+        <script>
+        (function() {
+            var input = document.getElementById('report-search');
+            var lastHighlight;
+            input.addEventListener('input', function() {
+                if (lastHighlight) {
+                    lastHighlight.style.background = '';
+                }
+                var val = input.value.trim().toLowerCase();
+                if (!val) return;
+                var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+                var found = false;
+                while (walker.nextNode()) {
+                    var node = walker.currentNode;
+                    if (node.nodeValue.toLowerCase().includes(val)) {
+                        var span = document.createElement('span');
+                        span.style.background = '#ffe066';
+                        var idx = node.nodeValue.toLowerCase().indexOf(val);
+                        span.textContent = node.nodeValue.substr(idx, val.length);
+                        var after = node.splitText(idx);
+                        after.nodeValue = after.nodeValue.substr(val.length);
+                        node.parentNode.insertBefore(span, after);
+                        lastHighlight = span;
+                        span.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        found = true;
+                        break;
+                    }
+                }
+            });
+        })();
+        </script>
         ${this.generateExecutiveSummary(analysis)}
         ${this.generateCostBreakdown(analysis)}
         ${this.generateTrendsSection(analysis)}
