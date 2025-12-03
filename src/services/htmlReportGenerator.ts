@@ -5,6 +5,7 @@
 
 import { ComprehensiveCostAnalysis, CostAnomaly, CostTrend } from '../models/costAnalysis';
 import { Recommendation, RecommendationSummary } from '../models/recommendation';
+import { VMCostSummary, VMCostAnalysis, VMCostRecommendation } from '../models/vmCostAnalysis';
 import { format } from 'date-fns';
 
 export class HtmlReportGenerator {
@@ -575,7 +576,8 @@ tbody tr:hover {
     public generate(
         analysis: ComprehensiveCostAnalysis,
         recommendations?: Recommendation[],
-        recommendationSummary?: RecommendationSummary
+        recommendationSummary?: RecommendationSummary,
+        vmCostSummary?: VMCostSummary
     ): string {
         const generatedAt = new Date().toISOString();
         
@@ -630,7 +632,9 @@ tbody tr:hover {
         ${this.generateTrendsSection(analysis)}
         ${this.generateAnomaliesSection(analysis)}
         ${this.generateTopServices(analysis)}
+        ${vmCostSummary ? this.generateVMCostSection(vmCostSummary) : ''}
         ${this.generateRecommendationsSection(recommendations, recommendationSummary)}
+        ${vmCostSummary ? this.generateVMRecommendationsSection(vmCostSummary) : ''}
         ${this.generateFooter(generatedAt)}
     </div>
 </body>
@@ -1057,6 +1061,203 @@ tbody tr:hover {
                             <div style="font-size: 13px; color: #555;">${this.escapeHtml(rec.rationale)}</div>
                         </div>
                     ` : ''}
+                </div>
+            `).join('')}
+        </section>`;
+    }
+
+    private generateVMCostSection(vmCostSummary: VMCostSummary): string {
+        if (!vmCostSummary || vmCostSummary.topCostVMs.length === 0) {
+            return '';
+        }
+
+        return `
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Virtual Machine Cost Analysis</h2>
+                <span class="section-badge">${vmCostSummary.topCostVMs.length} VMs</span>
+            </div>
+            
+            <div class="summary-grid" style="margin-bottom: 24px;">
+                <div class="summary-card">
+                    <div class="summary-label">Total VM Cost (90 Days)</div>
+                    <div class="summary-value">${this.formatCurrency(vmCostSummary.totalVMCost, 'USD')}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Average VM Cost</div>
+                    <div class="summary-value">${this.formatCurrency(vmCostSummary.averageVMCost, 'USD')}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Cost Trends</div>
+                    <div class="summary-value" style="font-size: 16px;">
+                        <span class="trend-up">${vmCostSummary.vmsByTrend.increasing} ↗</span> | 
+                        <span class="trend-down">${vmCostSummary.vmsByTrend.decreasing} ↘</span> | 
+                        <span class="trend-stable">${vmCostSummary.vmsByTrend.stable} →</span>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Potential Monthly Savings</div>
+                    <div class="summary-value" style="color: #28a745;">${this.formatCurrency(vmCostSummary.totalPotentialSavings, 'USD')}</div>
+                </div>
+            </div>
+
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Per-VM Cost Breakdown</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>VM Name</th>
+                        <th>Resource Group</th>
+                        <th>Size</th>
+                        <th>Total Cost</th>
+                        <th>Avg Daily</th>
+                        <th>Active Days</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${vmCostSummary.topCostVMs.map(vm => `
+                        <tr>
+                            <td class="table-primary">${this.escapeHtml(vm.vmName)}</td>
+                            <td>${this.escapeHtml(vm.resourceGroup)}</td>
+                            <td class="text-muted">${this.escapeHtml(vm.vmSize || 'N/A')}</td>
+                            <td class="table-number">${this.formatCurrency(vm.totalCost, 'USD')}</td>
+                            <td class="table-number">${this.formatCurrency(vm.averageDailyCost, 'USD')}</td>
+                            <td class="table-number">${vm.daysActive}/${vm.daysInPeriod} (${vm.utilizationPercentage.toFixed(0)}%)</td>
+                            <td class="${vm.costTrend === 'increasing' ? 'trend-up' : vm.costTrend === 'decreasing' ? 'trend-down' : 'trend-stable'}">
+                                ${this.getTrendIcon(vm.costTrend)} ${this.formatPercent(vm.trendPercentage)}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+
+            ${vmCostSummary.topCostVMs.length > 0 ? this.generateVMMonthlyBreakdown(vmCostSummary.topCostVMs.slice(0, 5)) : ''}
+        </section>`;
+    }
+
+    private generateVMMonthlyBreakdown(topVMs: VMCostAnalysis[]): string {
+        if (topVMs.length === 0 || !topVMs[0].monthlyCosts || topVMs[0].monthlyCosts.length === 0) {
+            return '';
+        }
+
+        const months = topVMs[0].monthlyCosts.map(m => m.monthName);
+
+        return `
+            <h3 style="font-size: 16px; font-weight: 600; margin-top: 32px; margin-bottom: 16px;">Monthly Cost Breakdown (Top 5 VMs)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>VM Name</th>
+                        ${months.map(month => `<th>${this.escapeHtml(month)}</th>`).join('')}
+                        <th>Projected Monthly</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${topVMs.map(vm => `
+                        <tr>
+                            <td class="table-primary">${this.escapeHtml(vm.vmName)}</td>
+                            ${vm.monthlyCosts.map(mc => `
+                                <td class="table-number">
+                                    ${this.formatCurrency(mc.totalCost, 'USD')}
+                                    ${mc.comparedToPreviousMonth !== undefined ? `
+                                        <div class="text-muted" style="font-size: 10px;">
+                                            ${this.formatPercent(mc.comparedToPreviousMonth)}
+                                        </div>
+                                    ` : ''}
+                                </td>
+                            `).join('')}
+                            <td class="table-number" style="font-weight: 600;">
+                                ${this.formatCurrency(vm.projectedMonthlyCost, 'USD')}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+    }
+
+    private generateVMRecommendationsSection(vmCostSummary: VMCostSummary): string {
+        const allRecommendations: Array<{vm: VMCostAnalysis; rec: VMCostRecommendation}> = [];
+        
+        for (const vm of vmCostSummary.topCostVMs) {
+            for (const rec of vm.recommendations) {
+                allRecommendations.push({ vm, rec });
+            }
+        }
+
+        if (allRecommendations.length === 0) {
+            return '';
+        }
+
+        // Sort by savings potential and take top 10
+        allRecommendations.sort((a, b) => b.rec.estimatedMonthlySavings - a.rec.estimatedMonthlySavings);
+        const topRecommendations = allRecommendations.slice(0, 10);
+
+        const totalPotentialSavings = topRecommendations.reduce((sum, r) => sum + r.rec.estimatedMonthlySavings, 0);
+
+        return `
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">VM-Specific Recommendations</h2>
+                <span class="section-badge">${topRecommendations.length} Recommendations</span>
+            </div>
+            
+            <div class="summary-grid" style="margin-bottom: 24px;">
+                <div class="summary-card">
+                    <div class="summary-label">Total Potential Savings</div>
+                    <div class="summary-value" style="color: #28a745;">${this.formatCurrency(totalPotentialSavings, 'USD')}/mo</div>
+                    <div class="summary-subtitle">${this.formatCurrency(totalPotentialSavings * 12, 'USD')}/year</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">By Type</div>
+                    <div class="summary-value" style="font-size: 14px;">
+                        ${Object.entries(vmCostSummary.recommendationsByType).map(([type, count]) => 
+                            `${type}: ${count}`
+                        ).join(' | ')}
+                    </div>
+                </div>
+            </div>
+
+            ${topRecommendations.map(({ vm, rec }) => `
+                <div class="recommendation-card" style="border-left-color: ${rec.confidence === 'high' ? '#28a745' : rec.confidence === 'medium' ? '#ffc107' : '#6c757d'};">
+                    <div class="recommendation-header">
+                        <div>
+                            <div class="recommendation-title">${this.escapeHtml(rec.title)}</div>
+                            <div style="font-size: 12px; color: #888; margin-top: 4px;">
+                                VM: ${this.escapeHtml(vm.vmName)} • ${this.escapeHtml(vm.resourceGroup)}
+                            </div>
+                        </div>
+                        <span class="badge ${rec.confidence === 'high' ? 'severity-low' : rec.confidence === 'medium' ? 'severity-medium' : 'severity-high'}" 
+                              style="background: ${rec.confidence === 'high' ? '#28a745' : rec.confidence === 'medium' ? '#ffc107' : '#6c757d'};">
+                            ${this.escapeHtml(rec.confidence)} confidence
+                        </span>
+                    </div>
+                    
+                    <div class="recommendation-description">
+                        ${this.escapeHtml(rec.reason)}
+                    </div>
+                    
+                    <div class="recommendation-metrics">
+                        <div class="metric-item">
+                            <div class="metric-label">Monthly Savings</div>
+                            <div class="metric-value">${this.formatCurrency(rec.estimatedMonthlySavings, 'USD')}</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Annual Savings</div>
+                            <div class="metric-value">${this.formatCurrency(rec.estimatedAnnualSavings, 'USD')}</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Implementation Effort</div>
+                            <div class="metric-value" style="font-size: 14px; text-transform: uppercase;">
+                                ${this.escapeHtml(rec.implementationEffort)}
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">VM Current Cost (90 days)</div>
+                            <div class="metric-value" style="font-size: 14px; color: #0f2557;">
+                                ${this.formatCurrency(vm.totalCost, 'USD')}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `).join('')}
         </section>`;

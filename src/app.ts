@@ -10,7 +10,9 @@ import { AzureResourceService } from './services/azureResourceService';
 import { CostTrendAnalyzer } from './analyzers/costTrendAnalyzer';
 import { AnomalyDetector } from './analyzers/anomalyDetector';
 import { SmartRecommendationAnalyzer } from './analyzers/smartRecommendationAnalyzer';
+import { VMCostAnalyzer } from './analyzers/vmCostAnalyzer';
 import { HtmlReportGenerator } from './services/htmlReportGenerator';
+import { VMCostSummary } from './models/vmCostAnalysis';
 import { logInfo, logError } from './utils/logger';
 import { configService } from './utils/config';
 import { InteractiveSetup } from './utils/interactiveSetup';
@@ -25,6 +27,7 @@ class FinOpsAssessmentApp {
     private trendAnalyzer: CostTrendAnalyzer;
     private anomalyDetector: AnomalyDetector;
     private smartRecommendations: SmartRecommendationAnalyzer;
+    private vmCostAnalyzer: VMCostAnalyzer;
     private htmlGenerator: HtmlReportGenerator;
 
     constructor() {
@@ -38,6 +41,7 @@ class FinOpsAssessmentApp {
         this.trendAnalyzer = new CostTrendAnalyzer();
         this.anomalyDetector = new AnomalyDetector();
         this.smartRecommendations = new SmartRecommendationAnalyzer();
+        this.vmCostAnalyzer = new VMCostAnalyzer();
         this.htmlGenerator = new HtmlReportGenerator();
 
         logInfo('All services initialized successfully');
@@ -71,12 +75,22 @@ class FinOpsAssessmentApp {
             const recommendationSummary = this.smartRecommendations.generateSummary(recommendations);
             logInfo(`[OK] Generated ${recommendations.length} recommendations (potential savings: $${recommendationSummary.totalPotentialMonthlySavings.toFixed(2)}/month)\n`);
 
-            // Step 5: Generate and display report
-            logInfo('Step 5: Generating assessment report...\n');
-            this.displayReport(costAnalysis, recommendationSummary);
+            // Step 5: Analyze VM costs
+            logInfo('Step 5: Analyzing per-VM costs...');
+            let vmCostSummary: VMCostSummary | undefined;
+            try {
+                vmCostSummary = await this.vmCostAnalyzer.analyzeVMCosts(90);
+                logInfo(`[OK] Analyzed costs for ${vmCostSummary.topCostVMs.length} VMs (total: $${vmCostSummary.totalVMCost.toFixed(2)}, potential savings: $${vmCostSummary.totalPotentialSavings.toFixed(2)}/month)\n`);
+            } catch (error) {
+                logInfo(`[WARN] VM cost analysis skipped: ${error}\n`);
+            }
+
+            // Step 6: Generate and display report
+            logInfo('Step 6: Generating assessment report...\n');
+            this.displayReport(costAnalysis, recommendationSummary, vmCostSummary);
             
-            // Step 6: Save results to file
-            await this.saveResults(costAnalysis, recommendations, recommendationSummary);
+            // Step 7: Save results to file
+            await this.saveResults(costAnalysis, recommendations, recommendationSummary, vmCostSummary);
 
             logInfo('\n' + '='.repeat(60));
             logInfo('FinOps assessment completed successfully!');
@@ -91,7 +105,7 @@ class FinOpsAssessmentApp {
     /**
      * Display assessment report to console
      */
-    private displayReport(costAnalysis: any, recommendationSummary?: any): void {
+    private displayReport(costAnalysis: any, recommendationSummary?: any, vmCostSummary?: VMCostSummary): void {
         console.log('\n' + colors.separator('='.repeat(60)));
         console.log(colors.header('AZURE FINOPS ASSESSMENT REPORT'));
         console.log(colors.separator('='.repeat(60)));
@@ -326,6 +340,80 @@ class FinOpsAssessmentApp {
             console.log('');
         }
 
+        // VM Cost Analysis Section (if available)
+        if (vmCostSummary && vmCostSummary.topCostVMs.length > 0) {
+            console.log('\n' + colors.subheader('VM COST ANALYSIS'));
+            console.log(colors.separator('-'.repeat(60)));
+            console.log(colors.label('Total VM Cost (90 days): ') + formatCurrency(vmCostSummary.totalVMCost, 'USD'));
+            console.log(colors.label('Average VM Cost:         ') + formatCurrency(vmCostSummary.averageVMCost, 'USD'));
+            console.log(colors.label('Potential Monthly Savings: ') + colors.savings(`$${vmCostSummary.totalPotentialSavings.toFixed(2)} USD`));
+            
+            console.log('\n' + colors.label('Cost Trends:'));
+            console.log(`  ${colors.high('Increasing:')} ${vmCostSummary.vmsByTrend.increasing} VMs`);
+            console.log(`  ${colors.success('Decreasing:')} ${vmCostSummary.vmsByTrend.decreasing} VMs`);
+            console.log(`  ${colors.dim('Stable:')} ${vmCostSummary.vmsByTrend.stable} VMs`);
+
+            // Show top 10 VMs by cost
+            console.log('\n' + colors.label('TOP VMs BY COST:'));
+            console.log(colors.separator('-'.repeat(100)));
+            console.log(
+                colors.dim('VM Name'.padEnd(30)) +
+                colors.dim('Resource Group'.padEnd(25)) +
+                colors.dim('Total Cost'.padEnd(15)) +
+                colors.dim('Avg/Day'.padEnd(12)) +
+                colors.dim('Active'.padEnd(10)) +
+                colors.dim('Trend')
+            );
+            console.log(colors.separator('-'.repeat(100)));
+
+            vmCostSummary.topCostVMs.slice(0, 10).forEach((vm) => {
+                const trendSymbol = vm.costTrend === 'increasing' ? '↗' : vm.costTrend === 'decreasing' ? '↘' : '→';
+                const trendColor = vm.costTrend === 'increasing' ? colors.high : vm.costTrend === 'decreasing' ? colors.success : colors.dim;
+                
+                console.log(
+                    colors.info(vm.vmName.padEnd(30).substring(0, 30)) +
+                    colors.dim(vm.resourceGroup.padEnd(25).substring(0, 25)) +
+                    colors.value(`$${vm.totalCost.toFixed(2)}`.padStart(12).padEnd(15)) +
+                    colors.dim(`$${vm.averageDailyCost.toFixed(2)}`.padStart(9).padEnd(12)) +
+                    colors.dim(`${vm.daysActive}/${vm.daysInPeriod}`.padEnd(10)) +
+                    trendColor(`${trendSymbol} ${vm.trendPercentage > 0 ? '+' : ''}${vm.trendPercentage.toFixed(1)}%`)
+                );
+            });
+
+            // Show monthly breakdown for top 3 VMs
+            if (vmCostSummary.topCostVMs.length > 0 && vmCostSummary.topCostVMs[0].monthlyCosts?.length > 0) {
+                console.log('\n' + colors.label('MONTHLY BREAKDOWN (Top 3 VMs):'));
+                const months = vmCostSummary.topCostVMs[0].monthlyCosts;
+                
+                // Header
+                let header = colors.dim('VM Name'.padEnd(25));
+                months.forEach(m => {
+                    header += colors.dim(m.monthName.padStart(12));
+                });
+                header += colors.dim('Projected'.padStart(12));
+                console.log(header);
+                console.log(colors.separator('-'.repeat(25 + (months.length + 1) * 12)));
+
+                vmCostSummary.topCostVMs.slice(0, 3).forEach((vm) => {
+                    let row = colors.info(vm.vmName.padEnd(25).substring(0, 25));
+                    vm.monthlyCosts.forEach(mc => {
+                        row += colors.value(`$${mc.totalCost.toFixed(0)}`.padStart(12));
+                    });
+                    row += colors.savings(`$${vm.projectedMonthlyCost.toFixed(0)}`.padStart(12));
+                    console.log(row);
+                });
+            }
+
+            // Show VM recommendations summary
+            if (Object.keys(vmCostSummary.recommendationsByType).length > 0) {
+                console.log('\n' + colors.label('VM RECOMMENDATIONS BY TYPE:'));
+                Object.entries(vmCostSummary.recommendationsByType).forEach(([type, count]) => {
+                    console.log(`  ${colors.info(type.padEnd(20))} ${colors.value(count.toString())} recommendations`);
+                });
+            }
+            console.log('');
+        }
+
         // Recommendations Section
         console.log('\n' + colors.subheader('RECOMMENDATIONS'));
         console.log(colors.separator('-'.repeat(60)));
@@ -447,7 +535,7 @@ class FinOpsAssessmentApp {
     /**
      * Save assessment results to JSON file
      */
-    private async saveResults(costAnalysis: any, recommendations?: any[], recommendationSummary?: any): Promise<void> {
+    private async saveResults(costAnalysis: any, recommendations?: any[], recommendationSummary?: any, vmCostSummary?: VMCostSummary): Promise<void> {
         try {
             const outputDir = path.join(process.cwd(), 'reports');
             
@@ -475,6 +563,11 @@ class FinOpsAssessmentApp {
                 };
             }
 
+            // Add VM cost analysis if available
+            if (vmCostSummary) {
+                report.vmCostAnalysis = vmCostSummary;
+            }
+
             fs.writeFileSync(jsonFilepath, JSON.stringify(report, null, 2));
             logInfo(`\n${colors.success('[OK]')} JSON report saved to: ${jsonFilepath}`);
 
@@ -485,7 +578,8 @@ class FinOpsAssessmentApp {
             const htmlContent = this.htmlGenerator.generate(
                 costAnalysis,
                 recommendations,
-                recommendationSummary
+                recommendationSummary,
+                vmCostSummary
             );
             
             fs.writeFileSync(htmlFilepath, htmlContent, 'utf-8');
