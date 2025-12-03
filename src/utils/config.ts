@@ -50,6 +50,16 @@ class ConfigService {
         return ConfigService.instance;
     }
 
+    /**
+     * Reload configuration from environment variables
+     * Call this after .env file is created/updated
+     */
+    public reload(): void {
+        // Reload dotenv to pick up new values
+        require('dotenv').config({ override: true });
+        this.appConfig = this.loadConfig();
+    }
+
     private loadConfig(): AppConfig {
         // Get config as plain object
         let cfg: any = {};

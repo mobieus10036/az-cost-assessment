@@ -8,6 +8,7 @@
 
 import { DefaultAzureCredential } from '@azure/identity';
 import { ComputeManagementClient } from '@azure/arm-compute';
+import { MonitorClient } from '@azure/arm-monitor';
 import { Recommendation, RecommendationSummary } from '../models/recommendation';
 import { configService } from '../utils/config';
 import { logInfo, logWarning } from '../utils/logger';
@@ -40,24 +41,35 @@ interface VMInfo {
     vmSize: string;
     powerState: string;
     monthlyEstimatedCost: number;
+    // New fields for deallocation analysis
+    daysDeallocated?: number;
+    lastDeallocatedDate?: string;
+    hasStartStopPattern?: boolean;
+    startStopEventsLast30Days?: number;
 }
 
 export class SmartRecommendationAnalyzer {
     private credential: DefaultAzureCredential;
     private subscriptionId: string;
     private computeClient: ComputeManagementClient;
+    private monitorClient: MonitorClient;
     
     // Configurable thresholds
     private readonly IDLE_CPU_THRESHOLD = 5; // % average CPU
     private readonly UNDERUTILIZED_CPU_THRESHOLD = 15; // % average CPU
     private readonly ANALYSIS_PERIOD_DAYS = 14; // Days to analyze metrics
     private readonly MIN_DATA_POINTS = 10; // Minimum data points for reliable analysis
+    
+    // Deallocation thresholds
+    private readonly MIN_DAYS_DEALLOCATED_FOR_RECOMMENDATION = 7; // Only flag VMs deallocated 7+ days
+    private readonly START_STOP_PATTERN_THRESHOLD = 5; // VMs with 5+ start/stop events in 30 days are considered scheduled
 
     constructor() {
         this.credential = new DefaultAzureCredential();
         const config = configService.get();
         this.subscriptionId = config.azure.subscriptionId;
         this.computeClient = new ComputeManagementClient(this.credential, this.subscriptionId);
+        this.monitorClient = new MonitorClient(this.credential, this.subscriptionId);
     }
 
     /**
@@ -163,7 +175,9 @@ export class SmartRecommendationAnalyzer {
     }
 
     /**
-     * Detect stopped/deallocated VMs
+     * Detect stopped/deallocated VMs with intelligent filtering
+     * Excludes VMs that follow start/stop patterns (scheduled shutdown)
+     * Only flags VMs deallocated for extended periods
      */
     private async detectStoppedVMs(): Promise<Recommendation[]> {
         logInfo('Analyzing stopped/deallocated VMs...');
@@ -173,16 +187,50 @@ export class SmartRecommendationAnalyzer {
             const vms = await this.listAllVMs();
             const stoppedVMs = vms.filter(vm => vm.powerState.includes('deallocated') || vm.powerState.includes('stopped'));
 
-            logInfo(`Found ${stoppedVMs.length} stopped/deallocated VMs`);
+            logInfo(`Found ${stoppedVMs.length} stopped/deallocated VMs, analyzing deallocation patterns...`);
 
-            for (const vm of stoppedVMs) {
+            // Enrich VMs with activity log data
+            const enrichedVMs = await this.enrichVMsWithActivityData(stoppedVMs);
+
+            // Filter VMs based on intelligent criteria
+            const abandonedVMs = enrichedVMs.filter(vm => {
+                // Skip VMs with regular start/stop patterns (likely scheduled)
+                if (vm.hasStartStopPattern) {
+                    logInfo(`Skipping ${vm.name}: has regular start/stop pattern (${vm.startStopEventsLast30Days} events in 30 days)`);
+                    return false;
+                }
+                
+                // Skip VMs deallocated for less than threshold days
+                if (vm.daysDeallocated !== undefined && vm.daysDeallocated < this.MIN_DAYS_DEALLOCATED_FOR_RECOMMENDATION) {
+                    logInfo(`Skipping ${vm.name}: only deallocated for ${vm.daysDeallocated} days (threshold: ${this.MIN_DAYS_DEALLOCATED_FOR_RECOMMENDATION})`);
+                    return false;
+                }
+                
+                return true;
+            });
+
+            logInfo(`Identified ${abandonedVMs.length} potentially abandoned VMs (deallocated ${this.MIN_DAYS_DEALLOCATED_FOR_RECOMMENDATION}+ days without start/stop pattern)`);
+
+            for (const vm of abandonedVMs) {
                 // Estimate monthly disk cost for stopped VM (still incurring storage charges)
                 const diskCost = vm.monthlyEstimatedCost * 0.1; // Rough estimate: 10% of running cost
+
+                // Determine priority based on days deallocated
+                let priority: 'critical' | 'high' | 'medium' | 'low' = 'low';
+                if (vm.daysDeallocated && vm.daysDeallocated > 90) {
+                    priority = 'high';
+                } else if (vm.daysDeallocated && vm.daysDeallocated > 30) {
+                    priority = 'medium';
+                }
+
+                const daysInfo = vm.daysDeallocated !== undefined 
+                    ? `Deallocated for ${vm.daysDeallocated} days (since ${vm.lastDeallocatedDate}).`
+                    : 'Deallocation duration unknown.';
 
                 const recommendation: Recommendation = {
                     id: uuidv4(),
                     type: 'delete-unused',
-                    priority: diskCost > 50 ? 'medium' : 'low',
+                    priority,
                     status: 'pending',
                     
                     resourceId: vm.id,
@@ -191,10 +239,10 @@ export class SmartRecommendationAnalyzer {
                     resourceGroup: vm.resourceGroup,
                     location: vm.location,
                     
-                    title: `Review deallocated VM: ${vm.name}`,
-                    description: `VM "${vm.name}" (${vm.vmSize}) is currently ${vm.powerState}. While deallocated VMs don't incur compute charges, they still incur storage costs for attached disks.`,
+                    title: `Review long-term deallocated VM: ${vm.name}`,
+                    description: `VM "${vm.name}" (${vm.vmSize}) has been deallocated for an extended period. ${daysInfo} While deallocated VMs don't incur compute charges, they still incur storage costs for attached disks.`,
                     action: 'Review if VM is still needed, consider deleting if unused',
-                    rationale: `Deallocated VMs continue to incur storage charges for OS and data disks. If this VM is no longer needed, deleting it will eliminate storage costs.`,
+                    rationale: `This VM has been deallocated for ${vm.daysDeallocated || 'an unknown number of'} days without any start events, suggesting it may be abandoned. Deallocated VMs continue to incur storage charges for OS and data disks.`,
                     
                     currentMonthlyCost: diskCost,
                     projectedMonthlyCost: 0,
@@ -229,7 +277,11 @@ export class SmartRecommendationAnalyzer {
                     
                     additionalInfo: {
                         vmSize: vm.vmSize,
-                        powerState: vm.powerState
+                        powerState: vm.powerState,
+                        daysDeallocated: vm.daysDeallocated,
+                        lastDeallocatedDate: vm.lastDeallocatedDate,
+                        hasStartStopPattern: vm.hasStartStopPattern,
+                        startStopEventsLast30Days: vm.startStopEventsLast30Days
                     }
                 };
 
@@ -240,6 +292,107 @@ export class SmartRecommendationAnalyzer {
         }
 
         return recommendations;
+    }
+
+    /**
+     * Enrich VMs with activity log data to determine deallocation duration and patterns
+     */
+    private async enrichVMsWithActivityData(vms: VMInfo[]): Promise<VMInfo[]> {
+        const enrichedVMs: VMInfo[] = [];
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+        // Process VMs in batches to avoid rate limiting
+        const BATCH_SIZE = 3;
+        for (let i = 0; i < vms.length; i += BATCH_SIZE) {
+            const batch = vms.slice(i, i + BATCH_SIZE);
+            
+            const batchResults = await Promise.allSettled(
+                batch.map(async (vm) => {
+                    try {
+                        // Query activity logs for this VM
+                        const filter = `eventTimestamp ge '${ninetyDaysAgo.toISOString()}' and resourceUri eq '${vm.id}'`;
+                        
+                        const activityLogs: Array<{ operationName: string; eventTimestamp: Date }> = [];
+                        
+                        try {
+                            const logsIterator = this.monitorClient.activityLogs.list(filter);
+                            for await (const log of logsIterator) {
+                                if (log.operationName?.localizedValue && log.eventTimestamp) {
+                                    activityLogs.push({
+                                        operationName: log.operationName.localizedValue,
+                                        eventTimestamp: log.eventTimestamp
+                                    });
+                                }
+                            }
+                        } catch (logError) {
+                            logWarning(`Could not fetch activity logs for ${vm.name}: ${logError}`);
+                        }
+
+                        // Analyze the activity logs
+                        const deallocateEvents = activityLogs.filter(log => 
+                            log.operationName.toLowerCase().includes('deallocate') ||
+                            log.operationName.toLowerCase().includes('power off')
+                        ).sort((a, b) => b.eventTimestamp.getTime() - a.eventTimestamp.getTime());
+
+                        const startEvents = activityLogs.filter(log => 
+                            log.operationName.toLowerCase().includes('start') &&
+                            !log.operationName.toLowerCase().includes('deallocate')
+                        );
+
+                        // Count start/stop events in last 30 days
+                        const recentStartEvents = startEvents.filter(e => e.eventTimestamp >= thirtyDaysAgo).length;
+                        const recentDeallocateEvents = deallocateEvents.filter(e => e.eventTimestamp >= thirtyDaysAgo).length;
+                        const totalStartStopEvents = recentStartEvents + recentDeallocateEvents;
+
+                        // Determine if VM has a start/stop pattern
+                        const hasStartStopPattern = totalStartStopEvents >= this.START_STOP_PATTERN_THRESHOLD;
+
+                        // Find last deallocate event
+                        let daysDeallocated: number | undefined;
+                        let lastDeallocatedDate: string | undefined;
+                        
+                        if (deallocateEvents.length > 0) {
+                            const lastDeallocate = deallocateEvents[0];
+                            lastDeallocatedDate = lastDeallocate.eventTimestamp.toISOString().split('T')[0];
+                            daysDeallocated = Math.floor((now.getTime() - lastDeallocate.eventTimestamp.getTime()) / (1000 * 60 * 60 * 24));
+                        }
+
+                        return {
+                            ...vm,
+                            daysDeallocated,
+                            lastDeallocatedDate,
+                            hasStartStopPattern,
+                            startStopEventsLast30Days: totalStartStopEvents
+                        };
+                    } catch (error) {
+                        // Return VM with unknown activity data if we can't fetch logs
+                        return {
+                            ...vm,
+                            daysDeallocated: undefined,
+                            lastDeallocatedDate: undefined,
+                            hasStartStopPattern: false,
+                            startStopEventsLast30Days: 0
+                        };
+                    }
+                })
+            );
+
+            // Collect results
+            for (const result of batchResults) {
+                if (result.status === 'fulfilled') {
+                    enrichedVMs.push(result.value);
+                }
+            }
+
+            // Delay between batches
+            if (i + BATCH_SIZE < vms.length) {
+                await this.delay(1000);
+            }
+        }
+
+        return enrichedVMs;
     }
 
     /**
@@ -325,34 +478,74 @@ export class SmartRecommendationAnalyzer {
 
     /**
      * Helper: List all VMs in subscription
+     * Optimized with parallel instance view fetching
      */
     private async listAllVMs(): Promise<VMInfo[]> {
         const vms: VMInfo[] = [];
         
         try {
             const vmIterator = this.computeClient.virtualMachines.listAll();
+            const vmList: Array<{ vm: any; resourceGroup: string }> = [];
             
+            // First, collect all VMs
             for await (const vm of vmIterator) {
-                // Get power state
-                const instanceView = await this.computeClient.virtualMachines.instanceView(
-                    this.extractResourceGroup(vm.id || ''),
-                    vm.name || ''
-                );
-                
-                const powerState = instanceView.statuses?.find((s: any) => s.code?.startsWith('PowerState/'))?.code || 'Unknown';
-                
-                // Estimate cost based on VM size
-                const monthlyCost = this.estimateVMCost(vm.hardwareProfile?.vmSize || '');
-                
-                vms.push({
-                    id: vm.id || '',
-                    name: vm.name || '',
-                    resourceGroup: this.extractResourceGroup(vm.id || ''),
-                    location: vm.location || '',
-                    vmSize: vm.hardwareProfile?.vmSize || 'Unknown',
-                    powerState: powerState,
-                    monthlyEstimatedCost: monthlyCost
+                vmList.push({
+                    vm,
+                    resourceGroup: this.extractResourceGroup(vm.id || '')
                 });
+            }
+
+            // Fetch instance views in parallel batches to avoid rate limiting
+            const BATCH_SIZE = 3; // Process 3 VMs concurrently (conservative for Compute API)
+            for (let i = 0; i < vmList.length; i += BATCH_SIZE) {
+                const batch = vmList.slice(i, i + BATCH_SIZE);
+                
+                const batchResults = await Promise.allSettled(
+                    batch.map(async ({ vm, resourceGroup }) => {
+                        try {
+                            const instanceView = await this.computeClient.virtualMachines.instanceView(
+                                resourceGroup,
+                                vm.name || ''
+                            );
+                            
+                            const powerState = instanceView.statuses?.find((s: any) => s.code?.startsWith('PowerState/'))?.code || 'Unknown';
+                            const monthlyCost = this.estimateVMCost(vm.hardwareProfile?.vmSize || '');
+                            
+                            return {
+                                id: vm.id || '',
+                                name: vm.name || '',
+                                resourceGroup,
+                                location: vm.location || '',
+                                vmSize: vm.hardwareProfile?.vmSize || 'Unknown',
+                                powerState,
+                                monthlyEstimatedCost: monthlyCost
+                            };
+                        } catch (error) {
+                            // If instance view fails, still include VM with unknown state
+                            return {
+                                id: vm.id || '',
+                                name: vm.name || '',
+                                resourceGroup,
+                                location: vm.location || '',
+                                vmSize: vm.hardwareProfile?.vmSize || 'Unknown',
+                                powerState: 'Unknown',
+                                monthlyEstimatedCost: this.estimateVMCost(vm.hardwareProfile?.vmSize || '')
+                            };
+                        }
+                    })
+                );
+
+                // Collect successful results
+                for (const result of batchResults) {
+                    if (result.status === 'fulfilled') {
+                        vms.push(result.value);
+                    }
+                }
+
+                // Small delay between batches to be respectful of API limits
+                if (i + BATCH_SIZE < vmList.length) {
+                    await this.delay(1000); // 1 second between batches
+                }
             }
         } catch (error) {
             logWarning(`Error listing VMs: ${error}`);

@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Azure Cost Analysis Report - Comprehensive financial analysis and optimization recommendations">
+    <title>Azure Cost Analysis Report - Dec 02, 2025</title>
+    <style>* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #f5f5f5;
+    padding: 0;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: #ffffff;
+}
+
+/* Header */
+.report-header {
+    background: linear-gradient(135deg, #0f2557 0%, #1a4d8f 100%);
+    color: #ffffff;
+    padding: 40px 48px;
+    border-bottom: 4px solid #0a1835;
+}
+
+.report-title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.report-subtitle {
+    font-size: 16px;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
+.report-meta {
+    display: flex;
+    gap: 32px;
+    margin-top: 24px;
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.meta-label {
+    opacity: 0.7;
+}
+
+/* Executive Summary */
+.executive-summary {
+    background: #f8f9fa;
+    padding: 32px 48px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.summary-card {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    border-left: 4px solid #0f2557;
+}
+
+.summary-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.summary-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f2557;
+    line-height: 1.2;
+}
+
+.summary-subtitle {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
+/* Sections */
+.section {
+    padding: 40px 48px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #0f2557;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f2557;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.section-badge {
+    background: #0f2557;
+    color: #ffffff;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 13px;
+}
+
+thead {
+    background: #f8f9fa;
+    border-top: 2px solid #0f2557;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+th {
+    text-align: left;
+    padding: 12px 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: #0f2557;
+}
+
+td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+tbody tr:hover {
+    background: #fafafa;
+}
+
+.table-number {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+}
+
+.table-primary {
+    color: #0f2557;
+    font-weight: 600;
+}
+
+/* Progress Bars */
+.progress-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #0f2557 0%, #1a4d8f 100%);
+    transition: width 0.3s ease;
+}
+
+/* Badges & Pills */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.severity-critical {
+    background: #dc3545;
+    color: #ffffff;
+}
+
+.severity-high {
+    background: #fd7e14;
+    color: #ffffff;
+}
+
+.severity-medium {
+    background: #ffc107;
+    color: #1a1a1a;
+}
+
+.severity-low {
+    background: #6c757d;
+    color: #ffffff;
+}
+
+.trend-up {
+    color: #dc3545;
+}
+
+.trend-down {
+    color: #28a745;
+}
+
+.trend-stable {
+    color: #6c757d;
+}
+
+/* Anomaly Cards */
+.anomaly-list {
+    display: grid;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.anomaly-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-left: 4px solid #dc3545;
+    padding: 20px;
+    border-radius: 4px;
+}
+
+.anomaly-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.anomaly-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1a1a1a;
+}
+
+.anomaly-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+    font-size: 12px;
+}
+
+.anomaly-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.anomaly-detail-label {
+    color: #888;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.anomaly-detail-value {
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+/* Recommendations */
+.recommendation-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-left: 4px solid #28a745;
+    padding: 24px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+}
+
+.recommendation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.recommendation-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f2557;
+    margin-bottom: 4px;
+}
+
+.recommendation-description {
+    color: #555;
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.recommendation-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin-top: 16px;
+}
+
+.metric-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+}
+
+.metric-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #28a745;
+}
+
+/* Trend Cards */
+.trend-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    padding: 20px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+}
+
+.trend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.trend-title {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.trend-indicator {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.trend-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* Charts Placeholder */
+.chart-container {
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    padding: 24px;
+    border-radius: 4px;
+    margin-top: 16px;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-placeholder {
+    color: #888;
+    font-size: 12px;
+}
+
+/* Daily Costs Grid */
+.daily-costs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.daily-cost-item {
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    padding: 12px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.daily-cost-date {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.daily-cost-amount {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f2557;
+    font-family: 'Courier New', monospace;
+}
+
+/* Footer */
+.report-footer {
+    background: #f8f9fa;
+    padding: 32px 48px;
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    border-top: 1px solid #e0e0e0;
+}
+
+.footer-note {
+    margin-top: 8px;
+    font-style: italic;
+}
+
+/* Utilities */
+.text-muted {
+    color: #888;
+}
+
+.text-success {
+    color: #28a745;
+}
+
+.text-danger {
+    color: #dc3545;
+}
+
+.text-warning {
+    color: #ffc107;
+}
+
+.font-mono {
+    font-family: 'Courier New', monospace;
+}
+
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .report-header,
+    .executive-summary,
+    .section {
+        padding: 24px;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .section-title {
+        font-size: 18px;
+    }
+    
+    table {
+        font-size: 12px;
+    }
+    
+    th, td {
+        padding: 8px;
+    }
+}
+
+@media print {
+    body {
+        background: #ffffff;
+    }
+    
+    .container {
+        max-width: 100%;
+    }
+    
+    .section {
+        page-break-inside: avoid;
+    }
+    
+    .anomaly-card,
+    .recommendation-card,
+    .trend-card {
+        page-break-inside: avoid;
+    }
+}</style>
+</head>
+<body>
+    <div class="container">
+        
+        <header class="report-header">
+            <h1 class="report-title">Azure Cost Analysis Report</h1>
+            <p class="report-subtitle">Comprehensive Financial Analysis & Optimization Insights</p>
+            <div class="report-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Subscription:</span>
+                    <span></span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Analysis Period:</span>
+                    <span>Sep 03, 2025 - Dec 02, 2025</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Generated:</span>
+                    <span>Dec 02, 2025 19:45:03</span>
+                </div>
+            </div>
+        </header>
+        <div style="margin: 24px 0 16px 0;">
+            <input type="text" id="report-search" placeholder="Search report..." style="width: 100%; max-width: 400px; padding: 8px 12px; font-size: 15px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+        <script>
+        (function() {
+            var input = document.getElementById('report-search');
+            var lastHighlight;
+            input.addEventListener('input', function() {
+                if (lastHighlight) {
+                    lastHighlight.style.background = '';
+                }
+                var val = input.value.trim().toLowerCase();
+                if (!val) return;
+                var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+                var found = false;
+                while (walker.nextNode()) {
+                    var node = walker.currentNode;
+                    if (node.nodeValue.toLowerCase().includes(val)) {
+                        var span = document.createElement('span');
+                        span.style.background = '#ffe066';
+                        var idx = node.nodeValue.toLowerCase().indexOf(val);
+                        span.textContent = node.nodeValue.substr(idx, val.length);
+                        var after = node.splitText(idx);
+                        after.nodeValue = after.nodeValue.substr(val.length);
+                        node.parentNode.insertBefore(span, after);
+                        lastHighlight = span;
+                        span.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        found = true;
+                        break;
+                    }
+                }
+            });
+        })();
+        </script>
+        
+        <section class="executive-summary">
+            <h2 class="section-title">Executive Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-label">Total Cost (90 Days)</div>
+                    <div class="summary-value">$11,302.74 USD</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Month to Date</div>
+                    <div class="summary-value">$255.32 USD</div>
+                    <div class="summary-subtitle">Estimated: $3,957.43 USD</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Average Daily</div>
+                    <div class="summary-value">$124.28 USD</div>
+                    <div class="summary-subtitle">Peak: $149.81 USD</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Month over Month</div>
+                    <div class="summary-value text-danger">
+                        +2.6%
+                    </div>
+                    <div class="summary-subtitle">$99.48 USD</div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Monthly Cost Breakdown</h2>
+                <span class="section-badge">USD</span>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Total Cost</th>
+                        <th>Change</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="table-primary">October 2025</td>
+                        <td class="table-number">$3,796.13 USD</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td class="table-primary">November 2025</td>
+                        <td class="table-number">$3,857.96 USD</td>
+                        <td class="text-danger">
+                            $61.83 USD
+                            (+1.6%)
+                        </td>
+                        <td class="trend-up">
+                            ↗
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="table-primary">December 2025 (MTD)</td>
+                        <td class="table-number">$255.32 USD</td>
+                        <td colspan="2" class="text-muted">Projected: $3,957.43 USD</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3 class="mt-3 mb-2" style="font-size: 16px; font-weight: 600;">Recent Daily Costs</h3>
+            <div class="daily-costs-grid">
+                
+                    <div class="daily-cost-item">
+                        <div class="daily-cost-date">Nov 30</div>
+                        <div class="daily-cost-amount">$128</div>
+                    </div>
+                
+                    <div class="daily-cost-item">
+                        <div class="daily-cost-date">Dec 01</div>
+                        <div class="daily-cost-amount">$127</div>
+                    </div>
+                
+            </div>
+        </section>
+        
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Cost Trends & Patterns</h2>
+                <span class="section-badge">2 Trends</span>
+            </div>
+            
+            
+                <div class="trend-card">
+                    <div class="trend-header">
+                        <div>
+                            <div class="trend-title">daily Trend</div>
+                            <div class="text-muted" style="font-size: 12px; margin-top: 4px;">
+                                decreasing -18.9%
+                            </div>
+                        </div>
+                        <div class="trend-indicator trend-down">
+                            ↘
+                        </div>
+                    </div>
+                    
+                    <div class="trend-stats">
+                        
+                            <div class="metric-item">
+                                <div class="metric-label">7-Day Average</div>
+                                <div class="metric-value" style="font-size: 16px; color: #0f2557;">
+                                    $126.90 USD
+                                </div>
+                            </div>
+                        
+                        
+                        
+                            <div class="metric-item">
+                                <div class="metric-label">30-Day Average</div>
+                                <div class="metric-value" style="font-size: 16px; color: #0f2557;">
+                                    $124.47 USD
+                                </div>
+                            </div>
+                        
+                        
+                        
+                        
+                        
+                            <div class="metric-item">
+                                <div class="metric-label">Projected Next daily</div>
+                                <div class="metric-value" style="font-size: 16px; color: #0f2557;">
+                                    $123.68 USD
+                                </div>
+                            </div>
+                        
+                    </div>
+                    
+                    
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0;">
+                            
+                                <div style="margin-bottom: 8px; font-size: 13px; color: #555;">
+                                    <strong>moving average:</strong> 7-day moving average: $126.90/day
+                                </div>
+                            
+                                <div style="margin-bottom: 8px; font-size: 13px; color: #555;">
+                                    <strong>moving average:</strong> 30-day moving average: $124.47/day
+                                </div>
+                            
+                        </div>
+                    
+                </div>
+            
+                <div class="trend-card">
+                    <div class="trend-header">
+                        <div>
+                            <div class="trend-title">weekly Trend</div>
+                            <div class="text-muted" style="font-size: 12px; margin-top: 4px;">
+                                increasing +10.3%
+                            </div>
+                        </div>
+                        <div class="trend-indicator trend-up">
+                            ↗
+                        </div>
+                    </div>
+                    
+                    <div class="trend-stats">
+                        
+                        
+                        
+                        
+                        
+                            <div class="metric-item">
+                                <div class="metric-label">Week over Week</div>
+                                <div class="metric-value" style="font-size: 16px; color: #dc3545;">
+                                    +10.3%
+                                </div>
+                            </div>
+                        
+                        
+                        
+                    </div>
+                    
+                    
+                </div>
+            
+        </section>
+        
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Cost Anomalies</h2>
+                <div style="display: flex; gap: 12px;">
+                    
+                    
+                    
+                    <span class="badge severity-low">3 Low</span>
+                </div>
+            </div>
+            
+            <div class="anomaly-list">
+                
+                    <div class="anomaly-card">
+                        <div class="anomaly-header">
+                            <div>
+                                <div class="anomaly-title">Daily cost spike detected: 20.4% deviation from average</div>
+                                <div style="font-size: 12px; color: #888; margin-top: 4px;">
+                                    Sep 13, 2025 20:00
+                                </div>
+                            </div>
+                            <span class="badge severity-low">
+                                low
+                            </span>
+                        </div>
+                        
+                        <div class="anomaly-details">
+                            <div class="anomaly-detail-item">
+                                <div class="anomaly-detail-label">Expected Cost</div>
+                                <div class="anomaly-detail-value">$124.21 USD</div>
+                            </div>
+                            <div class="anomaly-detail-item">
+                                <div class="anomaly-detail-label">Actual Cost</div>
+                                <div class="anomaly-detail-value">$149.51 USD</div>
+                            </div>
+                            <div class="anomaly-detail-item">
+                                <div class="anomaly-detail-label">Deviation</div>
+                                <div class="anomaly-detail-value text-danger">
+                                    +20.4%
+                                </div>
+                            </div>
+                            
+                            
+                                <div class="anomaly-detail-item">
+                                    <div class="anomaly-detail-label">Confidence</div>
+                                    <div class="anomaly-detail-value">85%</div>
+                                </div>
+                            
+                        </div>
+                        
+                        
+                            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0;">
+                                <div style="font-size: 12px; font-weight: 600; color: #0f2557; margin-bottom: 8px;">RECOMMENDED ACTIONS:</div>
+                                
+                                    <div style="font-size: 13px; color: #555; margin-bottom: 4px;">• Review Azure Activity Log for unusual deployments or resource changes</div>
+                                
+                                    <div style="font-size: 13px; color: #555; margin-bottom: 4px;">• Check for runaway processes or unexpected auto-scaling events</div>
+                                
+                                    <div style="font-size: 13px; color: #555; margin-bottom: 4px;">• Use Azure Cost Analysis to identify which services contributed to the spike</div>
+                                
+                            </div>
+                        
+                    </div>
+                
+                    <div class="anomaly-card">
+                        <div class="anomaly-header">
+                            <div>
+                                <div class="anomaly-title">Daily cost spike detected: 20.2% deviation from average</div>
+                                <div style="font-size: 12px; color: #888; margin-top: 4px;">
+                                    Oct 23, 2025 20:00
+                                </div>
+                            </div>
+                            <span class="badge severity-low">
+                                low
+                            </span>
+                        </div>
+                        
+                        <div class="anomaly-details">
+                            <div class="anomaly-detail-item">
+                                <div class="anomaly-detail-label">Expected Cost</div>
+                                <div class="anomaly-detail-value">$124.21 USD</div>
+                            </div>
+                            <div class="anomaly-detail-item">
+                                <div class="anomaly-detail-label">Actual Cost</div>
+                                <div class="anomaly-detail-value">$149.29 USD</div>
+                            </div>
+                            <div class="anomaly-detail-item">
+                                <div class="anomaly-detail-label">Deviation</div>
+                                <div class="anomaly-detail-value text-danger">
+                                    +20.2%
+                                </div>
+                            </div>
+                            
+                            
+                                <div class="anomaly-detail-item">
+                                    <div class="anomaly-detail-label">Confidence</div>
+                                    <div class="anomaly-detail-value">85%</div>
+                                </div>
+                            
+                        </div>
+                        
+                        
+                            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0;">
+                                <div style="font-size: 12px; font-weight: 600; color: #0f2557; margin-bottom: 8px;">RECOMMENDED ACTIONS:</div>
+                                
+                                    <div style="font-size: 13px; color: #555; margin-bottom: 4px;">• Review Azure Activity Log for unusual deployments or resource changes</div>
+                                
+                                    <div style="font-size: 13px; color: #555; margin-bottom: 4px;">• Check for runaway processes or unexpected auto-scaling events</div>
+                                
+                                    <div style="font-size: 13px; color: #555; margin-bottom: 4px;">• Use Azure Cost Analysis to identify which services contributed to the spike</div>
+                                
+                            </div>
+                        
+                    </div>
+                
+                    <div class="anomaly-card">
+                        <div class="anomaly-header">
+                            <div>
+                                <div class="anomaly-title">Daily cost spike detected: 20.6% deviation from average</div>
+                                <div style="font-size: 12px; color: #888; margin-top: 4px;">
+                                    Nov 13, 2025 19:00
+                                </div>
+                            </div>
+                            <span class="badge severity-low">
+                                low
+                            </span>
+                        </div>
+                        
+                        <div class="anomaly-details">
+                            <div class="anomaly-detail-item">
+                                <div class="anomaly-detail-label">Expected Cost</div>
+                                <div class="anomaly-detail-value">$124.21 USD</div>
+                            </div>
+                            <div class="anomaly-detail-item">
+                                <div class="anomaly-detail-label">Actual Cost</div>
+                                <div class="anomaly-detail-value">$149.81 USD</div>
+                            </div>
+                            <div class="anomaly-detail-item">
+                                <div class="anomaly-detail-label">Deviation</div>
+                                <div class="anomaly-detail-value text-danger">
+                                    +20.6%
+                                </div>
+                            </div>
+                            
+                            
+                                <div class="anomaly-detail-item">
+                                    <div class="anomaly-detail-label">Confidence</div>
+                                    <div class="anomaly-detail-value">85%</div>
+                                </div>
+                            
+                        </div>
+                        
+                        
+                            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0;">
+                                <div style="font-size: 12px; font-weight: 600; color: #0f2557; margin-bottom: 8px;">RECOMMENDED ACTIONS:</div>
+                                
+                                    <div style="font-size: 13px; color: #555; margin-bottom: 4px;">• Review Azure Activity Log for unusual deployments or resource changes</div>
+                                
+                                    <div style="font-size: 13px; color: #555; margin-bottom: 4px;">• Check for runaway processes or unexpected auto-scaling events</div>
+                                
+                                    <div style="font-size: 13px; color: #555; margin-bottom: 4px;">• Use Azure Cost Analysis to identify which services contributed to the spike</div>
+                                
+                            </div>
+                        
+                    </div>
+                
+            </div>
+        </section>
+        
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Top Cost Services</h2>
+                <span class="section-badge">Top 10</span>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Service</th>
+                        <th>Category</th>
+                        <th>Cost</th>
+                        <th>% of Total</th>
+                        <th>Distribution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        <tr>
+                            <td class="table-number">1</td>
+                            <td class="table-primary">Virtual Machines</td>
+                            <td>Compute</td>
+                            <td class="table-number">$89.36 USD</td>
+                            <td class="table-number">35.0%</td>
+                            <td style="min-width: 150px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 35%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="table-number">2</td>
+                            <td class="table-primary">Azure Kubernetes Service</td>
+                            <td>Compute</td>
+                            <td class="table-number">$51.06 USD</td>
+                            <td class="table-number">20.0%</td>
+                            <td style="min-width: 150px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 20%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="table-number">3</td>
+                            <td class="table-primary">Azure SQL Database</td>
+                            <td>Databases</td>
+                            <td class="table-number">$38.30 USD</td>
+                            <td class="table-number">15.0%</td>
+                            <td style="min-width: 150px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 15%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="table-number">4</td>
+                            <td class="table-primary">Storage Accounts</td>
+                            <td>Storage</td>
+                            <td class="table-number">$20.43 USD</td>
+                            <td class="table-number">8.0%</td>
+                            <td style="min-width: 150px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 8%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="table-number">5</td>
+                            <td class="table-primary">Application Gateway</td>
+                            <td>Networking</td>
+                            <td class="table-number">$17.87 USD</td>
+                            <td class="table-number">7.0%</td>
+                            <td style="min-width: 150px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 7%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="table-number">6</td>
+                            <td class="table-primary">Azure Cosmos DB</td>
+                            <td>Databases</td>
+                            <td class="table-number">$12.77 USD</td>
+                            <td class="table-number">5.0%</td>
+                            <td style="min-width: 150px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 5%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="table-number">7</td>
+                            <td class="table-primary">Log Analytics</td>
+                            <td>Management</td>
+                            <td class="table-number">$10.21 USD</td>
+                            <td class="table-number">4.0%</td>
+                            <td style="min-width: 150px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 4%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="table-number">8</td>
+                            <td class="table-primary">Azure Functions</td>
+                            <td>Compute</td>
+                            <td class="table-number">$7.66 USD</td>
+                            <td class="table-number">3.0%</td>
+                            <td style="min-width: 150px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 3%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="table-number">9</td>
+                            <td class="table-primary">Azure Cache for Redis</td>
+                            <td>Databases</td>
+                            <td class="table-number">$5.11 USD</td>
+                            <td class="table-number">2.0%</td>
+                            <td style="min-width: 150px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 2%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    
+                        <tr>
+                            <td class="table-number">10</td>
+                            <td class="table-primary">Azure Monitor</td>
+                            <td>Management</td>
+                            <td class="table-number">$2.55 USD</td>
+                            <td class="table-number">1.0%</td>
+                            <td style="min-width: 150px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 1%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    
+                </tbody>
+            </table>
+        </section>
+        
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Optimization Recommendations</h2>
+                    <span class="section-badge">0 Recommendations</span>
+                </div>
+                <p class="text-muted">No optimization recommendations generated. Your resources appear to be well-optimized.</p>
+            </section>
+        
+        <footer class="report-footer">
+            <div style="font-weight: 600; margin-bottom: 8px;">Azure Cost Analyzer</div>
+            <div>Generated: December 02, 2025 19:45:03</div>
+            <div class="footer-note">
+                All data sourced from Azure Cost Management API • Report for internal use only
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

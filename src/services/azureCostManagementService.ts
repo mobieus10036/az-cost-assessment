@@ -25,9 +25,13 @@ export class AzureCostManagementService {
     private credential: DefaultAzureCredential;
     private subscriptionId: string;
     private scope: string;
-    private readonly API_DELAY_MS = 15000; // 15 second delay between API calls to avoid rate limiting
-    private readonly MAX_RETRIES = 2;
-    private readonly RETRY_DELAY_MS = 20000; // 20 seconds between retries
+    private readonly API_DELAY_MS = 3000; // 3 second delay between API calls (~20 req/min, well under 30/min limit)
+    private readonly MAX_RETRIES = 3;
+    private readonly RETRY_DELAY_MS = 10000; // 10 seconds initial retry delay with exponential backoff
+    
+    // Cache for avoiding redundant API calls within the same session
+    private queryCache: Map<string, { data: any; timestamp: number }> = new Map();
+    private readonly CACHE_TTL_MS = 300000; // 5 minute cache TTL
 
     constructor() {
         const azureConfig = configService.getAzureConfig();
@@ -60,7 +64,7 @@ export class AzureCostManagementService {
                                         error?.statusCode === 429;
                 
                 if (isRateLimitError && attempt < this.MAX_RETRIES) {
-                    const waitTime = this.RETRY_DELAY_MS * attempt; // Exponential backoff
+                    const waitTime = this.RETRY_DELAY_MS * Math.pow(2, attempt - 1); // Exponential backoff: 5s, 10s, 20s
                     logWarning(`Rate limit hit for ${operationName}. Waiting ${waitTime}ms before retry ${attempt}/${this.MAX_RETRIES}...`);
                     await this.delay(waitTime);
                 } else {
@@ -72,27 +76,53 @@ export class AzureCostManagementService {
     }
 
     /**
+     * Generate cache key for query results
+     */
+    private getCacheKey(startDate: Date, endDate: Date, queryType: string): string {
+        return `${queryType}-${format(startDate, 'yyyy-MM-dd')}-${format(endDate, 'yyyy-MM-dd')}`;
+    }
+
+    /**
+     * Get cached result if available and not expired
+     */
+    private getCachedResult(cacheKey: string): any | null {
+        const cached = this.queryCache.get(cacheKey);
+        if (cached && (Date.now() - cached.timestamp) < this.CACHE_TTL_MS) {
+            logInfo(`Using cached result for ${cacheKey}`);
+            return cached.data;
+        }
+        return null;
+    }
+
+    /**
+     * Store result in cache
+     */
+    private setCachedResult(cacheKey: string, data: any): void {
+        this.queryCache.set(cacheKey, { data, timestamp: Date.now() });
+    }
+
+    /**
      * Get comprehensive cost analysis including historical, current, and forecasted data
      */
     public async getComprehensiveCostAnalysis(): Promise<ComprehensiveCostAnalysis> {
         try {
             logInfo('Starting comprehensive cost analysis...');
-            logInfo('Using sequential API calls with delays to avoid rate limiting...');
+            logInfo('Using optimized API calls with intelligent caching...');
             
             const analysisConfig = configService.getAnalysisConfig();
             const now = new Date();
             
-            // Fetch data sequentially with delays to avoid rate limiting
+            // Fetch historical data first (will be reused for forecast)
             logInfo('Fetching historical data...');
             const historical = await this.getHistoricalCostData(analysisConfig.historicalDays);
-            await this.delay(this.API_DELAY_MS);
             
+            // Fetch current month data (parallel-friendly queries are batched internally)
             logInfo('Fetching current month data...');
             const current = await this.getCurrentCostData();
-            await this.delay(this.API_DELAY_MS);
             
+            // Generate forecast using cached historical data (no additional API calls needed)
             logInfo('Generating forecast...');
-            const forecasted = await this.getForecastedCostData(analysisConfig.forecastDays);
+            const forecasted = await this.getForecastedCostData(analysisConfig.forecastDays, historical);
 
             // Calculate summary metrics
             const summary = this.calculateSummary(historical, current, forecasted);
@@ -257,18 +287,20 @@ export class AzureCostManagementService {
 
     /**
      * Get forecasted cost data for the specified number of days
+     * @param days Number of days to forecast
+     * @param existingHistoricalData Optional pre-fetched historical data to avoid redundant API calls
      */
-    public async getForecastedCostData(days: number = 30): Promise<ForecastedCostData> {
+    public async getForecastedCostData(days: number = 30, existingHistoricalData?: HistoricalCostData): Promise<ForecastedCostData> {
         try {
             logInfo(`Generating cost forecast for ${days} days...`);
             
             const startDate = addDays(new Date(), 1);
             const endDate = addDays(startDate, days);
             
-            // Use simple linear projection based on recent trends
-            // In production, you could use Azure Cost Management Forecast API or ML models
-            const historicalData = await this.getHistoricalCostData(30);
-            const avgDailyCost = historicalData.totalCost / 30;
+            // Use provided historical data or fetch fresh (with caching)
+            const historicalData = existingHistoricalData || await this.getHistoricalCostData(30);
+            const historicalDays = historicalData.dailyCosts.length || 30;
+            const avgDailyCost = historicalData.totalCost / historicalDays;
             
             const dailyForecasts: ForecastDataPoint[] = [];
             let cumulativeCost = 0;
@@ -324,6 +356,13 @@ export class AzureCostManagementService {
         costByService: CostByService[];
         costByResourceGroup: Array<{ resourceGroup: string; cost: number; resourceCount: number }>;
     }> {
+        // Check cache first
+        const cacheKey = this.getCacheKey(startDate, endDate, 'costs');
+        const cachedResult = this.getCachedResult(cacheKey);
+        if (cachedResult) {
+            return cachedResult;
+        }
+
         try {
             logInfo(`Querying actual costs from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}...`);
             
@@ -464,7 +503,7 @@ export class AzureCostManagementService {
 
             logInfo(`Query complete: ${totalCost.toFixed(2)} USD across ${dailyCosts.length} days, ${costByService.length} services`);
 
-            return {
+            const result = {
                 totalCost,
                 currency: 'USD',
                 dailyCosts,
@@ -473,6 +512,11 @@ export class AzureCostManagementService {
                 costByService,
                 costByResourceGroup: []
             };
+
+            // Cache the result
+            this.setCachedResult(cacheKey, result);
+
+            return result;
             
         } catch (error) {
             logError(`Error querying actual costs: ${error}`);

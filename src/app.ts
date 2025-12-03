@@ -525,8 +525,8 @@ async function main() {
 
             console.log('\nStarting cost analysis...\n');
             
-            // Reload environment variables after setup
-            require('dotenv').config({ override: true });
+            // Reload configuration after setup to pick up new environment variables
+            configService.reload();
         }
 
         const app = new FinOpsAssessmentApp();
