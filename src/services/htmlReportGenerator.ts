@@ -6,7 +6,7 @@
 import { ComprehensiveCostAnalysis, CostAnomaly, CostTrend } from '../models/costAnalysis';
 import { Recommendation, RecommendationSummary } from '../models/recommendation';
 import { VMCostSummary, VMCostAnalysis, VMCostRecommendation } from '../models/vmCostAnalysis';
-import { format } from 'date-fns';
+import { format, isWeekend } from 'date-fns';
 
 export class HtmlReportGenerator {
     
@@ -865,13 +865,17 @@ tbody tr:hover {
             <p style="font-size: 12px; color: #666; margin-bottom: 16px;">Showing top anomalies by severity from the last 60 days. Low-severity anomalies are filtered out.</p>
             
             <div class="anomaly-list">
-                ${analysis.anomalies.map(anomaly => `
+                ${analysis.anomalies.map(anomaly => {
+                    const anomalyDate = new Date(anomaly.detectedDate);
+                    const isWeekendDay = isWeekend(anomalyDate);
+                    const dayName = format(anomalyDate, 'EEEE');
+                    return `
                     <div class="anomaly-card">
                         <div class="anomaly-header">
                             <div>
                                 <div class="anomaly-title">${this.escapeHtml(anomaly.description)}</div>
                                 <div style="font-size: 12px; color: #888; margin-top: 4px;">
-                                    ${this.escapeHtml(format(new Date(anomaly.detectedDate), 'MMM dd, yyyy HH:mm'))}
+                                    ${this.escapeHtml(format(anomalyDate, 'MMM dd, yyyy HH:mm'))}${isWeekendDay ? ` <span style="background: #f0e6ff; color: #6b21a8; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; margin-left: 6px;">📅 ${dayName}</span>` : ''}
                                 </div>
                             </div>
                             <span class="badge ${this.getSeverityClass(anomaly.severity)}">
@@ -917,7 +921,7 @@ tbody tr:hover {
                             </div>
                         ` : ''}
                     </div>
-                `).join('')}
+                `;}).join('')}
             </div>
         </section>`;
     }
