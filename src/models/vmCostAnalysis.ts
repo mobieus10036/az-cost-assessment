@@ -11,6 +11,10 @@ export interface VMCostAnalysis {
     location?: string;
     powerState?: string;
     
+    // Deletion status
+    isDeleted: boolean;
+    lastSeenDate?: string;
+    
     // Cost metrics
     totalCost: number;
     averageDailyCost: number;

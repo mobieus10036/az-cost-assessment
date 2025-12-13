@@ -1120,6 +1120,7 @@ tbody tr:hover {
                 <thead>
                     <tr>
                         <th>VM Name</th>
+                        <th>Status</th>
                         <th>Resource Group</th>
                         <th>Size</th>
                         <th>Total Cost</th>
@@ -1130,15 +1131,22 @@ tbody tr:hover {
                 </thead>
                 <tbody>
                     ${vmCostSummary.topCostVMs.map(vm => `
-                        <tr>
+                        <tr${vm.isDeleted ? ' style="opacity: 0.7; background-color: #fef3f3;"' : ''}>
                             <td class="table-primary">${this.escapeHtml(vm.vmName)}</td>
+                            <td>
+                                ${vm.isDeleted 
+                                    ? `<span style="background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600;">🗑️ DELETED</span>
+                                       ${vm.lastSeenDate ? `<div style="font-size: 10px; color: #888; margin-top: 2px;">Last seen: ${vm.lastSeenDate}</div>` : ''}`
+                                    : '<span style="background: #d1fae5; color: #059669; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600;">Active</span>'
+                                }
+                            </td>
                             <td>${this.escapeHtml(vm.resourceGroup)}</td>
                             <td class="text-muted">${this.escapeHtml(vm.vmSize || 'N/A')}</td>
                             <td class="table-number">${this.formatCurrency(vm.totalCost, 'USD')}</td>
                             <td class="table-number">${this.formatCurrency(vm.averageDailyCost, 'USD')}</td>
                             <td class="table-number">${vm.daysActive}/${vm.daysInPeriod} (${vm.utilizationPercentage.toFixed(0)}%)</td>
                             <td class="${vm.costTrend === 'increasing' ? 'trend-up' : vm.costTrend === 'decreasing' ? 'trend-down' : 'trend-stable'}">
-                                ${this.getTrendIcon(vm.costTrend)} ${this.formatPercent(vm.trendPercentage)}
+                                ${vm.isDeleted ? '<span style="color: #888;">N/A</span>' : `${this.getTrendIcon(vm.costTrend)} ${this.formatPercent(vm.trendPercentage)}`}
                             </td>
                         </tr>
                     `).join('')}

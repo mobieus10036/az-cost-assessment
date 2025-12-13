@@ -198,7 +198,13 @@ export class VMCostAnalyzer {
         const vmName = this.extractVMName(resourceId);
         const resourceGroup = dailyCosts[0]?.resourceGroup || 'Unknown';
 
+        // Detect if VM has been deleted (has cost history but no current metadata)
+        const isDeleted = vmMetadata === undefined;
+        
         dailyCosts.sort((a, b) => a.date.localeCompare(b.date));
+        
+        // Get the last date this VM had activity (for deleted VMs)
+        const lastSeenDate = dailyCosts.length > 0 ? dailyCosts[dailyCosts.length - 1].date : undefined;
 
         const costs = dailyCosts.map(d => d.cost);
         const totalCost = costs.reduce((sum, c) => sum + c, 0);
@@ -213,7 +219,7 @@ export class VMCostAnalyzer {
         const { trend, trendPercentage } = this.calculateTrend(monthlyCosts);
 
         const costPerActiveDay = daysActive > 0 ? totalCost / daysActive : 0;
-        const projectedMonthlyCost = averageDailyCost * 30 * (utilizationPercentage / 100);
+        const projectedMonthlyCost = isDeleted ? 0 : averageDailyCost * 30 * (utilizationPercentage / 100);
 
         const recommendations = this.generateRecommendations({
             vmName,
@@ -226,8 +232,13 @@ export class VMCostAnalyzer {
             trendPercentage,
             projectedMonthlyCost,
             vmSize: vmMetadata?.hardwareProfile?.vmSize,
-            powerState: 'Unknown'
+            powerState: 'Unknown',
+            isDeleted
         });
+
+        if (isDeleted) {
+            logInfo(`VM "${vmName}" detected as DELETED (last seen: ${lastSeenDate})`);
+        }
 
         return {
             vmName,
@@ -235,7 +246,9 @@ export class VMCostAnalyzer {
             resourceGroup,
             vmSize: vmMetadata?.hardwareProfile?.vmSize,
             location: vmMetadata?.location,
-            powerState: 'Unknown',
+            powerState: isDeleted ? 'Deleted' : 'Unknown',
+            isDeleted,
+            lastSeenDate,
             totalCost,
             averageDailyCost,
             peakDailyCost,
@@ -340,8 +353,14 @@ export class VMCostAnalyzer {
         projectedMonthlyCost: number;
         vmSize?: string;
         powerState?: string;
+        isDeleted?: boolean;
     }): VMCostRecommendation[] {
         const recommendations: VMCostRecommendation[] = [];
+
+        // Skip recommendations for deleted VMs (they no longer incur costs)
+        if (params.isDeleted) {
+            return recommendations;
+        }
 
         // Reserved Instance for high utilization
         if (params.utilizationPercentage >= 70 && params.trend !== 'decreasing') {
