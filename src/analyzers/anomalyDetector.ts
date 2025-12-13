@@ -6,13 +6,20 @@
 import { CostAnomaly, CostDataPoint, ComprehensiveCostAnalysis } from '../models/costAnalysis';
 import { logInfo, logWarning } from '../utils/logger';
 import { configService } from '../utils/config';
+import { subDays, isAfter } from 'date-fns';
 
 export class AnomalyDetector {
     private anomalyThresholdPercent: number;
+    private anomalyLookbackDays: number;
+    private anomalyMinSeverity: 'low' | 'medium' | 'high' | 'critical';
+    private anomalyMaxDisplay: number;
 
     constructor() {
         const analysisConfig = configService.getAnalysisConfig();
         this.anomalyThresholdPercent = analysisConfig.anomalyThresholdPercent;
+        this.anomalyLookbackDays = analysisConfig.anomalyLookbackDays || 60;
+        this.anomalyMinSeverity = analysisConfig.anomalyMinSeverity || 'medium';
+        this.anomalyMaxDisplay = analysisConfig.anomalyMaxDisplay || 15;
     }
 
     /**
@@ -21,17 +28,43 @@ export class AnomalyDetector {
     public detectAnomalies(analysis: ComprehensiveCostAnalysis): CostAnomaly[] {
         logInfo('Detecting cost anomalies...');
         
-        const anomalies: CostAnomaly[] = [];
+        let anomalies: CostAnomaly[] = [];
         
-        // Detect daily cost anomalies
-        const dailyAnomalies = this.detectDailyAnomalies(analysis.historical.dailyCosts);
+        // Filter daily costs to only include data within lookback period
+        const cutoffDate = subDays(new Date(), this.anomalyLookbackDays);
+        const recentDailyCosts = analysis.historical.dailyCosts.filter(
+            d => isAfter(new Date(d.date), cutoffDate)
+        );
+        
+        logInfo(`Analyzing ${recentDailyCosts.length} days of cost data (lookback: ${this.anomalyLookbackDays} days)`);
+        
+        // Detect daily cost anomalies (using recent data only)
+        const dailyAnomalies = this.detectDailyAnomalies(recentDailyCosts);
         anomalies.push(...dailyAnomalies);
         
         // Detect service-level anomalies
         const serviceAnomalies = this.detectServiceAnomalies(analysis);
         anomalies.push(...serviceAnomalies);
         
-        logInfo(`Detected ${anomalies.length} cost anomalies`);
+        // Filter by minimum severity
+        const severityOrder = { 'low': 1, 'medium': 2, 'high': 3, 'critical': 4 };
+        const minSeverityLevel = severityOrder[this.anomalyMinSeverity];
+        anomalies = anomalies.filter(a => severityOrder[a.severity] >= minSeverityLevel);
+        
+        // Sort by severity (descending) and deviation (descending)
+        anomalies.sort((a, b) => {
+            const severityDiff = severityOrder[b.severity] - severityOrder[a.severity];
+            if (severityDiff !== 0) return severityDiff;
+            return Math.abs(b.deviationPercent) - Math.abs(a.deviationPercent);
+        });
+        
+        // Limit to max display count
+        if (anomalies.length > this.anomalyMaxDisplay) {
+            logInfo(`Limiting anomalies from ${anomalies.length} to ${this.anomalyMaxDisplay} (max display setting)`);
+            anomalies = anomalies.slice(0, this.anomalyMaxDisplay);
+        }
+        
+        logInfo(`Detected ${anomalies.length} cost anomalies (filtered by severity >= ${this.anomalyMinSeverity})`);
         return anomalies;
     }
 

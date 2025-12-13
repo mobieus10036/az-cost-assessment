@@ -19,6 +19,9 @@ export interface AppConfig {
         historicalDays: number;
         forecastDays: number;
         anomalyThresholdPercent: number;
+        anomalyLookbackDays: number;
+        anomalyMinSeverity: 'low' | 'medium' | 'high' | 'critical';
+        anomalyMaxDisplay: number;
         costTrendAnalysis: {
             timeFrame: string;
             thresholdPercent: number;
@@ -87,6 +90,9 @@ class ConfigService {
                 historicalDays: 90,
                 forecastDays: 30,
                 anomalyThresholdPercent: 20,
+                anomalyLookbackDays: 60,
+                anomalyMinSeverity: 'medium',
+                anomalyMaxDisplay: 15,
                 costTrendAnalysis: {
                     timeFrame: 'monthly',
                     thresholdPercent: 10,

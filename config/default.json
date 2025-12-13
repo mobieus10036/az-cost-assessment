@@ -8,6 +8,9 @@
     "historicalDays": 90,
     "forecastDays": 30,
     "anomalyThresholdPercent": 20,
+    "anomalyLookbackDays": 60,
+    "anomalyMinSeverity": "medium",
+    "anomalyMaxDisplay": 15,
     "costTrendAnalysis": {
       "timeFrame": "monthly",
       "thresholdPercent": 10

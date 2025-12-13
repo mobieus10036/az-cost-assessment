@@ -834,25 +834,35 @@ tbody tr:hover {
 
     private generateAnomaliesSection(analysis: ComprehensiveCostAnalysis): string {
         if (!analysis.anomalies || analysis.anomalies.length === 0) {
-            return '';
+            return `
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Cost Anomalies</h2>
+                    <span class="section-badge">None Detected</span>
+                </div>
+                <p style="color: #666; padding: 20px 0;">No significant cost anomalies detected in the recent period. This is good news!</p>
+            </section>`;
         }
 
         const criticalCount = analysis.anomalies.filter(a => a.severity === 'critical').length;
         const highCount = analysis.anomalies.filter(a => a.severity === 'high').length;
         const mediumCount = analysis.anomalies.filter(a => a.severity === 'medium').length;
         const lowCount = analysis.anomalies.filter(a => a.severity === 'low').length;
+        const totalCount = analysis.anomalies.length;
 
         return `
         <section class="section">
             <div class="section-header">
                 <h2 class="section-title">Cost Anomalies</h2>
-                <div style="display: flex; gap: 12px;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <span class="section-badge">${totalCount} Shown</span>
                     ${criticalCount > 0 ? `<span class="badge severity-critical">${criticalCount} Critical</span>` : ''}
                     ${highCount > 0 ? `<span class="badge severity-high">${highCount} High</span>` : ''}
                     ${mediumCount > 0 ? `<span class="badge severity-medium">${mediumCount} Medium</span>` : ''}
                     ${lowCount > 0 ? `<span class="badge severity-low">${lowCount} Low</span>` : ''}
                 </div>
             </div>
+            <p style="font-size: 12px; color: #666; margin-bottom: 16px;">Showing top anomalies by severity from the last 60 days. Low-severity anomalies are filtered out.</p>
             
             <div class="anomaly-list">
                 ${analysis.anomalies.map(anomaly => `
