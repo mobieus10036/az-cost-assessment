@@ -7,7 +7,6 @@ yarn-error.log*
 # Build output
 dist/
 build/
-reports
 *.js.map
 
 # Environment variables
@@ -18,9 +17,13 @@ reports
 # Logs
 logs/
 *.log
+combined.log
+error.log
 
 # Reports - contain sensitive subscription and resource data
+reports/
 reports/*.json
+reports/*.html
 
 # Operational scripts (backup management, etc.)
 scripts/enable-backup-*.ps1

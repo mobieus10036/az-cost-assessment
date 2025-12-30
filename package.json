@@ -31,9 +31,13 @@
     "start": "ts-node src/app.ts",
     "setup": "ts-node src/utils/interactiveSetup.ts",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "build": "tsc",
     "dev": "ts-node-dev --respawn src/app.ts",
-    "validate": "node scripts/validate-setup.js"
+    "validate": "node scripts/validate-setup.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist coverage",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@azure/arm-compute": "^23.1.0",
