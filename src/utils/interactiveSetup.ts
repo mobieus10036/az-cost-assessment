@@ -79,6 +79,50 @@ export class InteractiveSetup {
         }
     }
 
+    /**
+     * Verify Azure authentication - prompts for login if not authenticated
+     * Call this at the start of every assessment run
+     */
+    public async verifyAuthentication(): Promise<boolean> {
+        console.log('🔍 Verifying Azure authentication...\n');
+        
+        // Check Azure CLI installed
+        const hasAzureCli = await this.checkAzureCliInstalled();
+        if (!hasAzureCli) {
+            console.log('❌ Azure CLI is not installed.');
+            console.log('📥 Please install it from: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli\n');
+            return false;
+        }
+
+        // Check if logged in
+        const isLoggedIn = await this.isAzureLoggedIn();
+        
+        if (!isLoggedIn) {
+            console.log('⚠️  Not logged in to Azure\n');
+            const shouldLogin = await this.question('Would you like to login now? (Y/n): ');
+            
+            if (shouldLogin.toLowerCase() === 'n') {
+                return false;
+            }
+            
+            const loginSuccess = await this.loginToAzure();
+            if (!loginSuccess) {
+                return false;
+            }
+        } else {
+            // Show current account info
+            const currentAccount = await this.getCurrentAccount();
+            if (currentAccount) {
+                console.log(`✅ Logged in as: ${currentAccount.name}`);
+                console.log(`   Subscription: ${currentAccount.id}\n`);
+            } else {
+                console.log('✅ Azure CLI authenticated\n');
+            }
+        }
+        
+        return true;
+    }
+
     private async selectSubscription(subscriptions: AzureAccount[]): Promise<AzureAccount | null> {
         console.log('\n📋 Available Subscriptions:\n');
         

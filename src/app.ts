@@ -594,6 +594,15 @@ class FinOpsAssessmentApp {
 // Main execution
 async function main() {
     try {
+        // Always verify Azure authentication first
+        const setup = new InteractiveSetup();
+        const authValid = await setup.verifyAuthentication();
+        
+        if (!authValid) {
+            console.log('\n❌ Azure authentication required. Please try again.');
+            process.exit(1);
+        }
+
         // Check if configuration is valid
         const envPath = path.join(process.cwd(), '.env');
         const envExists = fs.existsSync(envPath);
@@ -609,7 +618,6 @@ async function main() {
         // Run interactive setup if config is missing or invalid
         if (!envExists || !configValid) {
             console.log('⚠️  Configuration not found or incomplete.\n');
-            const setup = new InteractiveSetup();
             const setupSuccess = await setup.run();
 
             if (!setupSuccess) {
