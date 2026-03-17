@@ -78,7 +78,7 @@ After setup, the analyzer will:
 
 ⏱️ **Takes about 2 minutes total**
 
-1. Query 90 days of historical costs
+1. Query 30 days of historical costs
 2. Analyze trends and patterns
 3. Detect cost anomalies
 4. Generate 30-day forecasts
@@ -95,7 +95,7 @@ AZURE COST ANALYZER REPORT
 📊 COST SUMMARY
 ------------------------------------------------------------
 Subscription: Production Subscription
-Historical Total (90 days): $9,425.98 USD
+Historical Total (30 days): $9,425.98 USD
 Current Month to Date: $972.25 USD
 Estimated Month End: $2,739.99 USD
 Average Daily Spend: $101.94 USD
@@ -110,7 +110,7 @@ Average Daily Spend: $101.94 USD
 ------------------------------------------------------------
 1. 🖥️ Optimize Virtual Machines (35.4% of costs)
    Consider Reserved Instances...
-   💰 Potential Savings: ~$667.77 USD/90 days
+   💰 Potential Savings: ~$667.77 USD/30 days
 ============================================================
 ✓ Report saved to: reports/cost-analysis-2025-11-16.json
 ✓ PDF report saved to: reports/cost-analysis-2025-11-16.pdf
@@ -188,7 +188,7 @@ Edit `config/default.json` to customize analysis settings:
 ```json
 {
   "analysis": {
-    "historicalDays": 90,           // Days of history to analyze
+   "historicalDays": 30,           // Days of history to analyze
     "forecastDays": 30,              // Days to forecast
     "anomalyThresholdPercent": 20    // Anomaly detection sensitivity
   }

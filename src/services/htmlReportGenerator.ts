@@ -3,7 +3,7 @@
  * Industrial, utilitarian design with comprehensive data presentation
  */
 
-import { ComprehensiveCostAnalysis, CostAnomaly, CostTrend } from '../models/costAnalysis';
+import { ComprehensiveCostAnalysis, DailyCostFluctuation } from '../models/costAnalysis';
 import { Recommendation, RecommendationSummary } from '../models/recommendation';
 import { VMCostSummary, VMCostAnalysis, VMCostRecommendation } from '../models/vmCostAnalysis';
 import { format, isWeekend } from 'date-fns';
@@ -20,7 +20,10 @@ export class HtmlReportGenerator {
     }
 
     private formatCurrency(amount: number, currency: string = 'USD'): string {
-        return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+        const isNegative = amount < 0;
+        const absolute = Math.abs(amount);
+        const formatted = `$${absolute.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+        return isNegative ? `-${formatted}` : formatted;
     }
 
     private formatPercent(value: number): string {
@@ -629,19 +632,21 @@ tbody tr:hover {
         </script>
         ${this.generateExecutiveSummary(analysis)}
         ${this.generateCostBreakdown(analysis)}
+        ${this.generateDailyFluctuationsSection(analysis)}
         ${this.generateTrendsSection(analysis)}
         ${this.generateAnomaliesSection(analysis)}
         ${this.generateTopServices(analysis)}
         ${vmCostSummary ? this.generateVMCostSection(vmCostSummary) : ''}
         ${this.generateRecommendationsSection(recommendations, recommendationSummary)}
         ${vmCostSummary ? this.generateVMRecommendationsSection(vmCostSummary) : ''}
-        ${this.generateFooter(generatedAt)}
+        ${this.generateFooter(analysis, generatedAt)}
     </div>
 </body>
 </html>`;
     }
 
     private generateHeader(analysis: ComprehensiveCostAnalysis, generatedAt: string): string {
+        const provenance = analysis.dataProvenance;
         return `
         <header class="report-header">
             <h1 class="report-title">Azure Cost Analysis Report</h1>
@@ -659,6 +664,14 @@ tbody tr:hover {
                     <span class="meta-label">Generated:</span>
                     <span>${this.escapeHtml(format(new Date(generatedAt), 'MMM dd, yyyy HH:mm:ss'))}</span>
                 </div>
+                <div class="meta-item">
+                    <span class="meta-label">Data Mode:</span>
+                    <span>${provenance.mode === 'live' ? 'LIVE VERIFIED' : 'FALLBACK'}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Throttle Policy:</span>
+                    <span>${provenance.queryPolicy.apiDelayMs}ms delay, ${provenance.queryPolicy.maxRetries} retries</span>
+                </div>
             </div>
         </header>`;
     }
@@ -666,13 +679,17 @@ tbody tr:hover {
     private generateExecutiveSummary(analysis: ComprehensiveCostAnalysis): string {
         const summary = analysis.summary;
         const current = analysis.current;
+        const analysisDays = Math.max(
+            1,
+            Math.ceil((new Date(analysis.historical.endDate).getTime() - new Date(analysis.historical.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
+        );
         
         return `
         <section class="executive-summary">
             <h2 class="section-title">Executive Summary</h2>
             <div class="summary-grid">
                 <div class="summary-card">
-                    <div class="summary-label">Total Cost (90 Days)</div>
+                    <div class="summary-label">Total Cost (${analysisDays} Days)</div>
                     <div class="summary-value">${this.formatCurrency(summary.totalHistoricalCost, summary.currency)}</div>
                 </div>
                 <div class="summary-card">
@@ -829,6 +846,78 @@ tbody tr:hover {
                     ` : ''}
                 </div>
             `).join('')}
+        </section>`;
+    }
+
+    private generateDailyFluctuationsSection(analysis: ComprehensiveCostAnalysis): string {
+        const fluctuations = (analysis.fluctuations || []).slice(0, 10);
+
+        if (fluctuations.length === 0) {
+            return `
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Daily Fluctuations & Service Drivers</h2>
+                    <span class="section-badge">No Significant Changes</span>
+                </div>
+                <p style="color: #666; padding: 20px 0;">No daily cost movement exceeded the configured fluctuation threshold.</p>
+            </section>`;
+        }
+
+        return `
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Daily Fluctuations & Service Drivers</h2>
+                <span class="section-badge">Top ${fluctuations.length}</span>
+            </div>
+
+            <div class="anomaly-list">
+                ${fluctuations.map((fluctuation: DailyCostFluctuation) => {
+                    const increase = fluctuation.totalChangeAmount >= 0;
+                    return `
+                    <div class="anomaly-card" style="border-left-color: ${increase ? '#dc3545' : '#28a745'};">
+                        <div class="anomaly-header">
+                            <div>
+                                <div class="anomaly-title">
+                                    ${this.escapeHtml(format(new Date(fluctuation.previousDate), 'MMM dd'))} → ${this.escapeHtml(format(new Date(fluctuation.date), 'MMM dd'))}
+                                </div>
+                                <div style="font-size: 12px; color: #888; margin-top: 4px;">
+                                    Total daily change: <strong class="${increase ? 'text-danger' : 'text-success'}">${this.formatCurrency(fluctuation.totalChangeAmount, analysis.summary.currency)} (${this.formatPercent(fluctuation.totalChangePercent)})</strong>
+                                </div>
+                            </div>
+                            <span class="badge ${this.getSeverityClass(fluctuation.significance)}">${this.escapeHtml(fluctuation.significance)}</span>
+                        </div>
+
+                        ${fluctuation.topServiceDrivers.length > 0 ? `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Service</th>
+                                        <th>Category</th>
+                                        <th>Previous Day</th>
+                                        <th>Current Day</th>
+                                        <th>Delta</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${fluctuation.topServiceDrivers.slice(0, 5).map(driver => `
+                                        <tr>
+                                            <td class="table-primary">${this.escapeHtml(driver.serviceName)}</td>
+                                            <td>${this.escapeHtml(driver.serviceCategory)}</td>
+                                            <td class="table-number">${this.formatCurrency(driver.previousCost, analysis.summary.currency)}</td>
+                                            <td class="table-number">${this.formatCurrency(driver.currentCost, analysis.summary.currency)}</td>
+                                            <td class="table-number ${driver.changeAmount >= 0 ? 'text-danger' : 'text-success'}">
+                                                ${this.formatCurrency(driver.changeAmount, analysis.summary.currency)} (${this.formatPercent(driver.changePercent)})
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : `
+                            <p style="color: #666; font-size: 13px;">Service-level attribution data was not available for this day pair.</p>
+                        `}
+                    </div>`;
+                }).join('')}
+            </div>
         </section>`;
     }
 
@@ -1285,13 +1374,14 @@ tbody tr:hover {
         </section>`;
     }
 
-    private generateFooter(generatedAt: string): string {
+    private generateFooter(analysis: ComprehensiveCostAnalysis, generatedAt: string): string {
+        const provenance = analysis.dataProvenance;
         return `
         <footer class="report-footer">
             <div style="font-weight: 600; margin-bottom: 8px;">Azure Cost Analyzer</div>
             <div>Generated: ${this.escapeHtml(format(new Date(generatedAt), 'MMMM dd, yyyy HH:mm:ss'))}</div>
             <div class="footer-note">
-                All data sourced from Azure Cost Management API • Report for internal use only
+                Data source: ${this.escapeHtml(provenance.source)} • Mode: ${provenance.mode.toUpperCase()} • Fallback used: ${provenance.generatedFromFallback ? 'YES' : 'NO'}
             </div>
         </footer>`;
     }

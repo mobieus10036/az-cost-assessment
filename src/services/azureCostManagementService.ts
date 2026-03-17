@@ -4,7 +4,7 @@
  * Uses Managed Identity authentication (preferred) with fallback to other methods
  */
 
-import { DefaultAzureCredential } from '@azure/identity';
+import { AzureCliCredential } from '@azure/identity';
 import { CostManagementClient } from '@azure/arm-costmanagement';
 import { 
     ComprehensiveCostAnalysis,
@@ -12,6 +12,7 @@ import {
     CurrentCostData,
     ForecastedCostData,
     CostDataPoint,
+    DailyServiceCostPoint,
     CostByResource,
     CostByService,
     ForecastDataPoint 
@@ -22,12 +23,14 @@ import { subDays, format, startOfMonth, endOfMonth, addDays, subMonths } from 'd
 
 export class AzureCostManagementService {
     private client: CostManagementClient;
-    private credential: DefaultAzureCredential;
+    private credential: AzureCliCredential;
     private subscriptionId: string;
     private scope: string;
-    private readonly API_DELAY_MS = 3000; // 3 second delay between API calls (~20 req/min, well under 30/min limit)
-    private readonly MAX_RETRIES = 3;
-    private readonly RETRY_DELAY_MS = 10000; // 10 seconds initial retry delay with exponential backoff
+    private readonly API_DELAY_MS: number;
+    private readonly MAX_RETRIES: number;
+    private readonly RETRY_DELAY_MS: number;
+    private readonly RETRY_MAX_DELAY_MS: number;
+    private readonly LIVE_DATA_ONLY: boolean;
     
     // Cache for avoiding redundant API calls within the same session
     private queryCache: Map<string, { data: any; timestamp: number }> = new Map();
@@ -37,9 +40,14 @@ export class AzureCostManagementService {
         const azureConfig = configService.getAzureConfig();
         this.subscriptionId = azureConfig.subscriptionId;
         this.scope = azureConfig.scope;
+        this.LIVE_DATA_ONLY = azureConfig.costManagement?.liveDataOnly ?? true;
+        this.API_DELAY_MS = azureConfig.costManagement?.apiDelayMs || 5000;
+        this.MAX_RETRIES = azureConfig.costManagement?.maxRetries || 5;
+        this.RETRY_DELAY_MS = azureConfig.costManagement?.retryBaseDelayMs || 15000;
+        this.RETRY_MAX_DELAY_MS = azureConfig.costManagement?.retryMaxDelayMs || 120000;
         
-        // Use DefaultAzureCredential for authentication (supports Managed Identity, Azure CLI, etc.)
-        this.credential = new DefaultAzureCredential();
+        // Force Azure CLI credential so runtime az login/subscription context is honored consistently.
+        this.credential = new AzureCliCredential({ tenantId: azureConfig.tenantId });
         this.client = new CostManagementClient(this.credential);
         
         logInfo('Azure Cost Management Service initialized');
@@ -64,7 +72,7 @@ export class AzureCostManagementService {
                                         error?.statusCode === 429;
                 
                 if (isRateLimitError && attempt < this.MAX_RETRIES) {
-                    const waitTime = this.RETRY_DELAY_MS * Math.pow(2, attempt - 1); // Exponential backoff: 5s, 10s, 20s
+                    const waitTime = Math.min(this.RETRY_DELAY_MS * Math.pow(2, attempt - 1), this.RETRY_MAX_DELAY_MS);
                     logWarning(`Rate limit hit for ${operationName}. Waiting ${waitTime}ms before retry ${attempt}/${this.MAX_RETRIES}...`);
                     await this.delay(waitTime);
                 } else {
@@ -137,6 +145,18 @@ export class AzureCostManagementService {
                 forecasted,
                 trends: [], // Will be populated by trend analyzer
                 anomalies: [], // Will be populated by anomaly detector
+                fluctuations: [],
+                dataProvenance: {
+                    mode: 'live',
+                    source: 'Azure Cost Management API',
+                    generatedFromFallback: false,
+                    queryPolicy: {
+                        apiDelayMs: this.API_DELAY_MS,
+                        maxRetries: this.MAX_RETRIES,
+                        retryBaseDelayMs: this.RETRY_DELAY_MS,
+                        retryMaxDelayMs: this.RETRY_MAX_DELAY_MS
+                    }
+                },
                 summary
             };
 
@@ -168,6 +188,7 @@ export class AzureCostManagementService {
                 totalCost: queryResult.totalCost,
                 currency: queryResult.currency || 'USD',
                 dailyCosts: queryResult.dailyCosts,
+                dailyServiceCosts: queryResult.dailyServiceCosts,
                 monthlyCosts: queryResult.monthlyCosts,
                 costByResource: queryResult.costByResource,
                 costByService: queryResult.costByService,
@@ -351,6 +372,7 @@ export class AzureCostManagementService {
         totalCost: number;
         currency: string;
         dailyCosts: CostDataPoint[];
+        dailyServiceCosts: DailyServiceCostPoint[];
         monthlyCosts: CostDataPoint[];
         costByResource: CostByResource[];
         costByService: CostByService[];
@@ -410,6 +432,31 @@ export class AzureCostManagementService {
                 }
             };
 
+            // Query 3: Get daily costs by service to attribute daily fluctuations
+            const dailyServiceQuery = {
+                type: "Usage",
+                timeframe: "Custom",
+                timePeriod: {
+                    from: startDate.toISOString(),
+                    to: endDate.toISOString()
+                },
+                dataset: {
+                    granularity: "Daily",
+                    aggregation: {
+                        totalCost: {
+                            name: "Cost",
+                            function: "Sum"
+                        }
+                    },
+                    grouping: [
+                        {
+                            type: "Dimension",
+                            name: "ServiceName"
+                        }
+                    ]
+                }
+            };
+
             // Execute queries sequentially with delay and retry logic to avoid rate limiting
             const dailyResult = await this.executeWithRetry(
                 () => this.client.query.usage(this.scope, dailyQuery as any),
@@ -420,6 +467,12 @@ export class AzureCostManagementService {
             const serviceResult = await this.executeWithRetry(
                 () => this.client.query.usage(this.scope, serviceQuery as any),
                 'service costs query'
+            );
+            await this.delay(this.API_DELAY_MS);
+
+            const dailyServiceResult = await this.executeWithRetry(
+                () => this.client.query.usage(this.scope, dailyServiceQuery as any),
+                'daily service costs query'
             );
 
             // Parse daily costs
@@ -468,6 +521,7 @@ export class AzureCostManagementService {
             // Parse service costs
             const costByService: CostByService[] = [];
             const serviceMap = new Map<string, number>();
+            const dailyServiceCosts: DailyServiceCostPoint[] = [];
             
             if (serviceResult.rows && serviceResult.rows.length > 0) {
                 const costIndex = serviceResult.columns?.findIndex((col: any) => col.name === 'Cost') ?? -1;
@@ -501,12 +555,56 @@ export class AzureCostManagementService {
                 costByService.sort((a, b) => b.cost - a.cost);
             }
 
-            logInfo(`Query complete: ${totalCost.toFixed(2)} USD across ${dailyCosts.length} days, ${costByService.length} services`);
+            // Parse daily service costs
+            if (dailyServiceResult.rows && dailyServiceResult.rows.length > 0) {
+                const costIndex = dailyServiceResult.columns?.findIndex((col: any) => col.name === 'Cost') ?? -1;
+                const dateIndex = dailyServiceResult.columns?.findIndex((col: any) => col.name === 'UsageDate') ?? -1;
+                const currencyIndex = dailyServiceResult.columns?.findIndex((col: any) => col.name === 'Currency') ?? -1;
+                const serviceIndex = dailyServiceResult.columns?.findIndex((col: any) => col.name === 'ServiceName') ?? -1;
+
+                dailyServiceResult.rows.forEach((row: any) => {
+                    const cost = costIndex >= 0 ? parseFloat(row[costIndex]) : 0;
+                    const date = dateIndex >= 0 ? row[dateIndex] : '';
+                    const currency = currencyIndex >= 0 ? row[currencyIndex] : 'USD';
+                    const serviceName = serviceIndex >= 0 ? row[serviceIndex] : 'Unknown';
+
+                    if (!serviceName || cost <= 0) {
+                        return;
+                    }
+
+                    let dateString: string;
+                    if (typeof date === 'number') {
+                        const dateStr = date.toString();
+                        const year = parseInt(dateStr.substring(0, 4));
+                        const month = parseInt(dateStr.substring(4, 6)) - 1;
+                        const day = parseInt(dateStr.substring(6, 8));
+                        dateString = new Date(year, month, day).toISOString();
+                    } else if (typeof date === 'string' && date.length === 8) {
+                        const year = parseInt(date.substring(0, 4));
+                        const month = parseInt(date.substring(4, 6)) - 1;
+                        const day = parseInt(date.substring(6, 8));
+                        dateString = new Date(year, month, day).toISOString();
+                    } else {
+                        dateString = date;
+                    }
+
+                    dailyServiceCosts.push({
+                        date: dateString,
+                        serviceName,
+                        serviceCategory: this.categorizeService(serviceName),
+                        cost,
+                        currency
+                    });
+                });
+            }
+
+            logInfo(`Query complete: ${totalCost.toFixed(2)} USD across ${dailyCosts.length} days, ${costByService.length} services, ${dailyServiceCosts.length} daily service points`);
 
             const result = {
                 totalCost,
                 currency: 'USD',
                 dailyCosts,
+                dailyServiceCosts,
                 monthlyCosts: [],
                 costByResource: [],
                 costByService,
@@ -520,9 +618,24 @@ export class AzureCostManagementService {
             
         } catch (error) {
             logError(`Error querying actual costs: ${error}`);
+            if (this.LIVE_DATA_ONLY) {
+                const errorText = String(error);
+                const wrongIssuerDetected = errorText.includes('wrong issuer') && errorText.includes('must match the tenant');
+                if (wrongIssuerDetected) {
+                    throw new Error(
+                        'Live cost query failed due to Azure tenant token mismatch. ' +
+                        'Run `az account clear`, then `az login --tenant <AZURE_TENANT_ID>`, and ensure the active subscription belongs to that tenant. ' +
+                        'Fallback is disabled (AZURE_COST_LIVE_DATA_ONLY=true).'
+                    );
+                }
+
+                throw new Error(
+                    `Live cost query failed and fallback is disabled (AZURE_COST_LIVE_DATA_ONLY=true). ` +
+                    `Please retry later or increase AZURE_COST_API_DELAY_MS / AZURE_COST_MAX_RETRIES.`
+                );
+            }
+
             logWarning('Falling back to mock data due to API error');
-            
-            // Fallback to mock data if API fails
             return this.generateMockCostData(startDate, endDate);
         }
     }
@@ -571,6 +684,7 @@ export class AzureCostManagementService {
         totalCost: number;
         currency: string;
         dailyCosts: CostDataPoint[];
+        dailyServiceCosts: DailyServiceCostPoint[];
         monthlyCosts: CostDataPoint[];
         costByResource: CostByResource[];
         costByService: CostByService[];
@@ -578,6 +692,7 @@ export class AzureCostManagementService {
     } {
         const days = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
         const dailyCosts: CostDataPoint[] = [];
+        const dailyServiceCosts: DailyServiceCostPoint[] = [];
         let totalCost = 0;
         
         for (let i = 0; i <= days; i++) {
@@ -590,6 +705,42 @@ export class AzureCostManagementService {
                 cost,
                 currency: 'USD'
             });
+
+            const computeShare = cost * 0.45;
+            const storageShare = cost * 0.25;
+            const databaseShare = cost * 0.20;
+            const otherShare = cost * 0.10;
+
+            dailyServiceCosts.push(
+                {
+                    date: format(date, 'yyyy-MM-dd'),
+                    serviceName: 'Virtual Machines',
+                    serviceCategory: 'Compute',
+                    cost: computeShare,
+                    currency: 'USD'
+                },
+                {
+                    date: format(date, 'yyyy-MM-dd'),
+                    serviceName: 'Storage Accounts',
+                    serviceCategory: 'Storage',
+                    cost: storageShare,
+                    currency: 'USD'
+                },
+                {
+                    date: format(date, 'yyyy-MM-dd'),
+                    serviceName: 'Azure SQL Database',
+                    serviceCategory: 'Databases',
+                    cost: databaseShare,
+                    currency: 'USD'
+                },
+                {
+                    date: format(date, 'yyyy-MM-dd'),
+                    serviceName: 'Log Analytics',
+                    serviceCategory: 'Management',
+                    cost: otherShare,
+                    currency: 'USD'
+                }
+            );
         }
 
         // Mock service distribution
@@ -618,6 +769,7 @@ export class AzureCostManagementService {
             totalCost,
             currency: 'USD',
             dailyCosts,
+            dailyServiceCosts,
             monthlyCosts: [],
             costByResource: [],
             costByService,

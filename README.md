@@ -4,7 +4,7 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 
-**Rapid and actionable Azure cost assessment for modern enterprises.** Get comprehensive cost intelligence, anomaly detection, and optimization recommendations in minutes—not hours.
+**A specialized Azure FinOps investigation tool for critical cost questions.** Start with one high-value question: when daily costs move, which service caused it?
 
 > 🚀 Part of the Mobieus Rapid Assessment Suite — Accelerate your Azure security and cost insights.
 
@@ -12,8 +12,13 @@
 
 ## ✨ Features
 
-### 📊 Cost Intelligence
-- **90-day historical analysis** — Full spending breakdown by service, resource, and resource group
+### 🎯 Specialized Investigation Features
+- **Daily fluctuation attribution (primary feature)** — Detect significant day-over-day changes and identify the services that drove the delta
+- **Driver ranking** — Rank top service contributors for each fluctuation day pair
+- **Evidence-first outputs** — Show previous day cost, current day cost, and service-level delta in console, JSON, and HTML report
+
+### 📊 Supporting Cost Intelligence
+- **30-day historical analysis (default)** — Full spending breakdown by service, resource, and resource group
 - **Daily cost tracking** — Granular day-by-day spending with 14-day rolling view
 - **Month-over-month comparison** — Track trends across 3 months with projections
 
@@ -54,9 +59,11 @@ npm start
 The tool will automatically:
 1. ✅ Check Azure CLI installation
 2. 🔐 Prompt for Azure login if needed
-3. 📋 Let you select your subscription
-4. 💾 Save configuration for future runs
-5. 📊 Generate comprehensive cost analysis
+3. 📋 Let you select your subscription for this run
+4. ⚙️ Use selected subscription/tenant context at runtime (no hardcoded IDs required)
+5. 🕒 Let you choose analysis window (`7`, `30`, `90`, or custom; default `30`)
+6. 💾 Optionally save selected subscription as default for future runs
+7. 📊 Generate comprehensive cost analysis
 
 **See [QUICKSTART.md](QUICKSTART.md) for detailed walkthrough.**
 
@@ -114,12 +121,28 @@ az-cost-assessment/
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and configure:
+`.env` is optional. If omitted, the app will use Azure CLI login + interactive subscription selection at startup.
+
+If you want a fixed default context, copy `.env.example` to `.env` and configure:
 
 ```bash
 AZURE_SUBSCRIPTION_ID=your-subscription-id
 AZURE_TENANT_ID=your-tenant-id
+HISTORICAL_DAYS=30
+AZURE_COST_LIVE_DATA_ONLY=true
+AZURE_COST_API_DELAY_MS=5000
+AZURE_COST_MAX_RETRIES=5
 ```
+
+### Live Data Integrity
+
+- The app is configured for **live data only** by default.
+- If Azure Cost Management API requests fail, report generation stops instead of using synthetic data.
+- Throttling controls are configurable to trade speed for reliability:
+  - `AZURE_COST_API_DELAY_MS`
+  - `AZURE_COST_MAX_RETRIES`
+  - `AZURE_COST_RETRY_BASE_DELAY_MS`
+  - `AZURE_COST_RETRY_MAX_DELAY_MS`
 
 ### Analysis Settings
 
@@ -128,7 +151,7 @@ Edit `config/default.json` to customize:
 ```json
 {
   "analysis": {
-    "historicalDays": 90,
+    "historicalDays": 30,
     "forecastDays": 30,
     "anomalyThresholdPercent": 20,
     "anomalyMinSeverity": "medium"
@@ -147,7 +170,7 @@ AZURE FINOPS ASSESSMENT REPORT
 
 📊 COST SUMMARY
 ------------------------------------------------------------
-Historical Total (90 days):     $9,425.98 USD
+Historical Total (30 days):     $9,425.98 USD
 Current Month to Date:          $972.25 USD
 Estimated Month End:            $2,739.99 USD
 Average Daily Spend:            $101.94 USD

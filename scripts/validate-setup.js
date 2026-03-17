@@ -27,13 +27,11 @@ if (majorVersion < 16) {
     console.log(`  ✓ Node.js ${nodeVersion} - OK`);
 }
 
-// Check 2: .env file
+// Check 2: .env file (optional)
 console.log('\n✓ Checking .env file...');
 const envPath = path.join(__dirname, '..', '.env');
 if (!fs.existsSync(envPath)) {
-    console.warn('  ⚠ .env file not found. Copy .env.example to .env and configure it.');
-    console.warn('    Command: cp .env.example .env');
-    hasErrors = true;
+    console.log('  ⓘ .env file not found (optional). Runtime Azure login + subscription selection will be used.');
 } else {
     console.log('  ✓ .env file exists');
     
@@ -51,7 +49,7 @@ if (!fs.existsSync(envPath)) {
     
     if (missingVars.length > 0) {
         console.warn(`  ⚠ Missing or unconfigured variables: ${missingVars.join(', ')}`);
-        hasErrors = true;
+        console.warn('    The app can still run using runtime Azure context selection.');
     } else {
         console.log('  ✓ Required environment variables are set');
     }
@@ -147,10 +145,9 @@ if (hasErrors) {
     console.log('='.repeat(60));
     console.log('\nQuick Fix Commands:');
     console.log('  1. npm install');
-    console.log('  2. cp .env.example .env');
-    console.log('  3. Edit .env with your Azure details');
-    console.log('  4. az login');
-    console.log('  5. npm start');
+    console.log('  2. az login');
+    console.log('  3. npm start');
+    console.log('  4. (Optional) create .env for fixed default subscription');
     process.exit(1);
 } else {
     console.log('✓ Setup Complete - Ready to run!');

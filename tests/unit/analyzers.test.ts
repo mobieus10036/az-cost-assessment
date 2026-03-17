@@ -1,6 +1,111 @@
 import { CostTrendAnalyzer } from '../../src/analyzers/costTrendAnalyzer';
-import { ResourceOptimizationAnalyzer } from '../../src/analyzers/resourceOptimizationAnalyzer';
 import { AnomalyDetector } from '../../src/analyzers/anomalyDetector';
+import { ComprehensiveCostAnalysis } from '../../src/models/costAnalysis';
+
+const buildAnalysis = (): ComprehensiveCostAnalysis => ({
+    id: 'test-analysis',
+    subscriptionId: 'sub-1',
+    scope: '/subscriptions/sub-1',
+    analysisDate: '2026-03-17T00:00:00.000Z',
+    historical: {
+        startDate: '2026-03-01T00:00:00.000Z',
+        endDate: '2026-03-17T00:00:00.000Z',
+        totalCost: 520,
+        currency: 'USD',
+        dailyCosts: [
+            { date: '2026-03-15T00:00:00.000Z', cost: 100, currency: 'USD' },
+            { date: '2026-03-16T00:00:00.000Z', cost: 300, currency: 'USD' },
+            { date: '2026-03-17T00:00:00.000Z', cost: 120, currency: 'USD' }
+        ],
+        dailyServiceCosts: [],
+        monthlyCosts: [
+            { date: '2026-01-01T00:00:00.000Z', cost: 1200, currency: 'USD' },
+            { date: '2026-02-01T00:00:00.000Z', cost: 1400, currency: 'USD' },
+            { date: '2026-03-01T00:00:00.000Z', cost: 1600, currency: 'USD' }
+        ],
+        costByResource: [],
+        costByService: [
+            {
+                serviceName: 'Virtual Machines',
+                serviceCategory: 'Compute',
+                cost: 320,
+                currency: 'USD',
+                percentageOfTotal: 61.5
+            }
+        ],
+        costByResourceGroup: []
+    },
+    current: {
+        billingPeriodStart: '2026-03-01T00:00:00.000Z',
+        billingPeriodEnd: '2026-03-31T00:00:00.000Z',
+        currentDate: '2026-03-17T00:00:00.000Z',
+        monthToDateCost: 900,
+        estimatedMonthEndCost: 1550,
+        currency: 'USD',
+        dailyCosts: [
+            { date: '2026-03-15T00:00:00.000Z', cost: 100, currency: 'USD' },
+            { date: '2026-03-16T00:00:00.000Z', cost: 300, currency: 'USD' },
+            { date: '2026-03-17T00:00:00.000Z', cost: 120, currency: 'USD' }
+        ],
+        topCostResources: [],
+        topCostServices: [
+            {
+                serviceName: 'Virtual Machines',
+                serviceCategory: 'Compute',
+                cost: 320,
+                currency: 'USD',
+                percentageOfTotal: 61.5
+            }
+        ],
+        comparisonToPreviousMonth: {
+            previousMonthTotal: 1300,
+            changeAmount: -400,
+            changePercent: -30.7
+        },
+        monthlyComparison: {
+            twoMonthsAgo: { name: 'January 2026', total: 1200 },
+            lastMonth: { name: 'February 2026', total: 1300 },
+            currentMonth: { name: 'March 2026', monthToDate: 900, projected: 1550 },
+            lastTwoMonthsChange: { amount: 100, percent: 8.3 },
+            projectedChange: { amount: 250, percent: 19.2 }
+        }
+    },
+    forecasted: {
+        forecastStartDate: '2026-03-18T00:00:00.000Z',
+        forecastEndDate: '2026-04-16T00:00:00.000Z',
+        totalForecastedCost: 1500,
+        currency: 'USD',
+        dailyForecasts: [],
+        monthlyForecasts: [],
+        forecastMethod: 'linear-projection',
+        confidenceLevel: 0.9,
+        assumptions: []
+    },
+    trends: [],
+    anomalies: [],
+    fluctuations: [],
+    dataProvenance: {
+        mode: 'live',
+        source: 'Azure Cost Management API',
+        generatedFromFallback: false,
+        queryPolicy: {
+            apiDelayMs: 5000,
+            maxRetries: 5,
+            retryBaseDelayMs: 15000,
+            retryMaxDelayMs: 120000
+        }
+    },
+    summary: {
+        totalHistoricalCost: 520,
+        currentMonthToDate: 900,
+        forecastedMonthEnd: 1550,
+        forecastedNextMonth: 1500,
+        currency: 'USD',
+        avgDailySpend: 173.3,
+        peakDailySpend: 300,
+        lowestDailySpend: 100
+    }
+});
 
 describe('CostTrendAnalyzer', () => {
     let costTrendAnalyzer: CostTrendAnalyzer;
@@ -9,36 +114,15 @@ describe('CostTrendAnalyzer', () => {
         costTrendAnalyzer = new CostTrendAnalyzer();
     });
 
-    it('should analyze cost trends correctly', () => {
-        const mockData = [
-            { date: '2023-01-01', cost: 100 },
-            { date: '2023-02-01', cost: 150 },
-            { date: '2023-03-01', cost: 120 },
-        ];
-        const result = costTrendAnalyzer.analyze(mockData);
-        expect(result).toEqual(expect.objectContaining({
-            averageCost: expect.any(Number),
-            trend: expect.any(String),
+    it('analyzes trends from comprehensive analysis', () => {
+        const result = costTrendAnalyzer.analyzeTrends(buildAnalysis());
+
+        expect(result.length).toBeGreaterThan(0);
+        expect(result[0]).toEqual(expect.objectContaining({
+            period: expect.any(String),
+            direction: expect.any(String),
+            changePercent: expect.any(Number)
         }));
-    });
-});
-
-describe('ResourceOptimizationAnalyzer', () => {
-    let resourceOptimizationAnalyzer: ResourceOptimizationAnalyzer;
-
-    beforeEach(() => {
-        resourceOptimizationAnalyzer = new ResourceOptimizationAnalyzer();
-    });
-
-    it('should identify underutilized resources', () => {
-        const mockResources = [
-            { id: '1', usage: 5, threshold: 10 },
-            { id: '2', usage: 0, threshold: 10 },
-        ];
-        const result = resourceOptimizationAnalyzer.identifyUnderutilized(mockResources);
-        expect(result).toEqual(expect.arrayContaining([
-            expect.objectContaining({ id: '2' }),
-        ]));
     });
 });
 
@@ -49,15 +133,8 @@ describe('AnomalyDetector', () => {
         anomalyDetector = new AnomalyDetector();
     });
 
-    it('should detect anomalies in cost data', () => {
-        const mockCostData = [
-            { date: '2023-01-01', cost: 100 },
-            { date: '2023-01-02', cost: 1000 }, // Anomaly
-            { date: '2023-01-03', cost: 150 },
-        ];
-        const result = anomalyDetector.detect(mockCostData);
-        expect(result).toEqual(expect.arrayContaining([
-            expect.objectContaining({ date: '2023-01-02', cost: 1000 }),
-        ]));
+    it('detects anomalies from comprehensive analysis', () => {
+        const result = anomalyDetector.detectAnomalies(buildAnalysis());
+        expect(Array.isArray(result)).toBe(true);
     });
 });

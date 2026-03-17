@@ -5,7 +5,7 @@
 
 import { CostManagementClient } from '@azure/arm-costmanagement';
 import { ComputeManagementClient, VirtualMachine } from '@azure/arm-compute';
-import { DefaultAzureCredential } from '@azure/identity';
+import { AzureCliCredential } from '@azure/identity';
 import { 
     VMCostAnalysis, 
     MonthlyVMCost, 
@@ -21,15 +21,15 @@ export class VMCostAnalyzer {
     private computeClient: ComputeManagementClient;
     private subscriptionId: string;
     private scope: string;
-    private credential: DefaultAzureCredential;
+    private credential: AzureCliCredential;
 
     private static readonly API_DELAY_MS = 3000;
     private static readonly MAX_RETRIES = 3;
     private static readonly RETRY_DELAY_MS = 10000;
 
     constructor() {
-        this.credential = new DefaultAzureCredential();
         const azureConfig = configService.getAzureConfig();
+        this.credential = new AzureCliCredential({ tenantId: azureConfig.tenantId });
         this.subscriptionId = azureConfig.subscriptionId;
         this.scope = azureConfig.scope;
         this.costClient = new CostManagementClient(this.credential);

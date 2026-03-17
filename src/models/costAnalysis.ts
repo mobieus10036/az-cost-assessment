@@ -9,6 +9,48 @@ export interface CostDataPoint {
     currency: string;
 }
 
+export interface DailyServiceCostPoint {
+    date: string; // ISO date string
+    serviceName: string;
+    serviceCategory: string;
+    cost: number;
+    currency: string;
+}
+
+export interface ServiceCostDelta {
+    serviceName: string;
+    serviceCategory: string;
+    previousCost: number;
+    currentCost: number;
+    changeAmount: number;
+    changePercent: number;
+    currency: string;
+}
+
+export interface DailyCostFluctuation {
+    date: string;
+    previousDate: string;
+    totalCost: number;
+    previousTotalCost: number;
+    totalChangeAmount: number;
+    totalChangePercent: number;
+    direction: 'increasing' | 'decreasing' | 'stable';
+    significance: 'low' | 'medium' | 'high' | 'critical';
+    topServiceDrivers: ServiceCostDelta[];
+}
+
+export interface DataProvenance {
+    mode: 'live' | 'fallback';
+    source: string;
+    generatedFromFallback: boolean;
+    queryPolicy: {
+        apiDelayMs: number;
+        maxRetries: number;
+        retryBaseDelayMs: number;
+        retryMaxDelayMs: number;
+    };
+}
+
 export interface CostByResource {
     resourceId: string;
     resourceName: string;
@@ -34,6 +76,7 @@ export interface HistoricalCostData {
     totalCost: number;
     currency: string;
     dailyCosts: CostDataPoint[];
+    dailyServiceCosts: DailyServiceCostPoint[];
     monthlyCosts: CostDataPoint[];
     costByResource: CostByResource[];
     costByService: CostByService[];
@@ -150,6 +193,8 @@ export interface ComprehensiveCostAnalysis {
     forecasted: ForecastedCostData;
     trends: CostTrend[];
     anomalies: CostAnomaly[];
+    fluctuations: DailyCostFluctuation[];
+    dataProvenance: DataProvenance;
     summary: {
         totalHistoricalCost: number;
         currentMonthToDate: number;

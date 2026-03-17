@@ -1,8 +1,8 @@
 {
   "azure": {
-    "subscriptionId": "",
-    "tenantId": "",
-    "scope": "",
+    "subscriptionId": "test-subscription",
+    "tenantId": "test-tenant",
+    "scope": "/subscriptions/test-subscription",
     "costManagement": {
       "liveDataOnly": true,
       "apiDelayMs": 5000,
@@ -12,7 +12,7 @@
     }
   },
   "analysis": {
-    "historicalDays": 30,
+    "historicalDays": 90,
     "forecastDays": 30,
     "anomalyThresholdPercent": 20,
     "anomalyLookbackDays": 60,
@@ -30,7 +30,7 @@
     }
   },
   "logging": {
-    "level": "info",
-    "logFile": "logs/app.log"
+    "level": "error",
+    "logFile": "logs/test.log"
   }
 }

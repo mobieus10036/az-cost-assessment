@@ -9,10 +9,12 @@ import { AzureCostManagementService } from './services/azureCostManagementServic
 import { AzureResourceService } from './services/azureResourceService';
 import { CostTrendAnalyzer } from './analyzers/costTrendAnalyzer';
 import { AnomalyDetector } from './analyzers/anomalyDetector';
+import { DailyCostFluctuationAnalyzer } from './analyzers/dailyCostFluctuationAnalyzer';
 import { SmartRecommendationAnalyzer } from './analyzers/smartRecommendationAnalyzer';
 import { VMCostAnalyzer } from './analyzers/vmCostAnalyzer';
 import { HtmlReportGenerator } from './services/htmlReportGenerator';
 import { VMCostSummary } from './models/vmCostAnalysis';
+import { ComprehensiveCostAnalysis, DailyCostFluctuation } from './models/costAnalysis';
 import { logInfo, logError } from './utils/logger';
 import { configService } from './utils/config';
 import { InteractiveSetup } from './utils/interactiveSetup';
@@ -26,6 +28,7 @@ class FinOpsAssessmentApp {
     private resourceService: AzureResourceService;
     private trendAnalyzer: CostTrendAnalyzer;
     private anomalyDetector: AnomalyDetector;
+    private dailyFluctuationAnalyzer: DailyCostFluctuationAnalyzer;
     private smartRecommendations: SmartRecommendationAnalyzer;
     private vmCostAnalyzer: VMCostAnalyzer;
     private htmlGenerator: HtmlReportGenerator;
@@ -40,6 +43,7 @@ class FinOpsAssessmentApp {
         this.resourceService = new AzureResourceService();
         this.trendAnalyzer = new CostTrendAnalyzer();
         this.anomalyDetector = new AnomalyDetector();
+        this.dailyFluctuationAnalyzer = new DailyCostFluctuationAnalyzer();
         this.smartRecommendations = new SmartRecommendationAnalyzer();
         this.vmCostAnalyzer = new VMCostAnalyzer();
         this.htmlGenerator = new HtmlReportGenerator();
@@ -69,14 +73,19 @@ class FinOpsAssessmentApp {
             costAnalysis.anomalies = this.anomalyDetector.detectAnomalies(costAnalysis);
             logInfo(`[OK] Detected ${costAnalysis.anomalies.length} anomalies\n`);
 
-            // Step 4: Generate smart recommendations
-            logInfo('Step 4: Generating smart recommendations...');
+            // Step 4: Attribute daily cost fluctuations to services
+            logInfo('Step 4: Analyzing daily cost fluctuations...');
+            costAnalysis.fluctuations = this.dailyFluctuationAnalyzer.analyzeFluctuations(costAnalysis);
+            logInfo(`[OK] Identified ${costAnalysis.fluctuations.length} significant daily fluctuations\n`);
+
+            // Step 5: Generate smart recommendations
+            logInfo('Step 5: Generating smart recommendations...');
             const recommendations = await this.smartRecommendations.analyze();
             const recommendationSummary = this.smartRecommendations.generateSummary(recommendations);
             logInfo(`[OK] Generated ${recommendations.length} recommendations (potential savings: $${recommendationSummary.totalPotentialMonthlySavings.toFixed(2)}/month)\n`);
 
-            // Step 5: Analyze VM costs
-            logInfo('Step 5: Analyzing per-VM costs...');
+            // Step 6: Analyze VM costs
+            logInfo('Step 6: Analyzing per-VM costs...');
             let vmCostSummary: VMCostSummary | undefined;
             try {
                 vmCostSummary = await this.vmCostAnalyzer.analyzeVMCosts(90);
@@ -85,11 +94,11 @@ class FinOpsAssessmentApp {
                 logInfo(`[WARN] VM cost analysis skipped: ${error}\n`);
             }
 
-            // Step 6: Generate and display report
-            logInfo('Step 6: Generating assessment report...\n');
+            // Step 7: Generate and display report
+            logInfo('Step 7: Generating assessment report...\n');
             this.displayReport(costAnalysis, recommendationSummary, vmCostSummary);
             
-            // Step 7: Save results to file
+            // Step 8: Save results to file
             await this.saveResults(costAnalysis, recommendations, recommendationSummary, vmCostSummary);
 
             logInfo('\n' + '='.repeat(60));
@@ -105,7 +114,7 @@ class FinOpsAssessmentApp {
     /**
      * Display assessment report to console
      */
-    private displayReport(costAnalysis: any, recommendationSummary?: any, vmCostSummary?: VMCostSummary): void {
+    private displayReport(costAnalysis: ComprehensiveCostAnalysis, recommendationSummary?: any, vmCostSummary?: VMCostSummary): void {
         console.log('\n' + colors.separator('='.repeat(60)));
         console.log(colors.header('AZURE FINOPS ASSESSMENT REPORT'));
         console.log(colors.separator('='.repeat(60)));
@@ -157,6 +166,8 @@ class FinOpsAssessmentApp {
         } else {
             console.log(colors.dim('No daily cost data available'));
         }
+
+        this.displayDailyFluctuations(costAnalysis.fluctuations, costAnalysis.summary.currency);
 
         // Month-over-Month Comparison (3 months)
         console.log('\n' + colors.subheader('MONTHLY COST COMPARISON'));
@@ -431,6 +442,35 @@ class FinOpsAssessmentApp {
         console.log('\n' + colors.separator('='.repeat(60)));
     }
 
+    private displayDailyFluctuations(fluctuations: DailyCostFluctuation[], currency: string): void {
+        console.log('\n' + colors.subheader('DAILY FLUCTUATIONS WITH SERVICE DRIVERS'));
+        console.log(colors.separator('-'.repeat(60)));
+
+        if (!fluctuations || fluctuations.length === 0) {
+            console.log(colors.dim('No significant daily fluctuations found at current threshold.'));
+            return;
+        }
+
+        fluctuations.slice(0, 5).forEach((fluctuation, index) => {
+            const symbol = fluctuation.totalChangeAmount >= 0 ? '^' : 'v';
+            const changeLine = `${symbol} ${formatPercentChange(fluctuation.totalChangePercent)} (${formatCurrency(fluctuation.totalChangeAmount, currency)})`;
+            const changeColor = getChangeColor(fluctuation.totalChangePercent);
+
+            console.log(`${colors.label(`${index + 1}. ${fluctuation.previousDate.split('T')[0]} -> ${fluctuation.date.split('T')[0]}`)} ${changeColor(changeLine)}`);
+
+            if (fluctuation.topServiceDrivers.length === 0) {
+                console.log(colors.dim('   No service attribution data available for this day.'));
+                return;
+            }
+
+            fluctuation.topServiceDrivers.slice(0, 3).forEach(driver => {
+                const driverSymbol = driver.changeAmount >= 0 ? '+' : '-';
+                console.log(colors.dim(`   ${driverSymbol} ${driver.serviceName}: ${formatCurrency(Math.abs(driver.changeAmount), currency)} (${formatPercentChange(driver.changePercent)})`));
+            });
+            console.log('');
+        });
+    }
+
     /**
      * Generate actionable recommendations based on cost analysis
      */
@@ -442,6 +482,10 @@ class FinOpsAssessmentApp {
         const recommendations = [];
         const topServices = costAnalysis.historical.costByService?.slice(0, 5) || [];
         const totalCost = costAnalysis.historical.totalCost;
+        const analysisDays = Math.max(
+            1,
+            Math.ceil((new Date(costAnalysis.historical.endDate).getTime() - new Date(costAnalysis.historical.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
+        );
 
         // Recommendation 1: Top service optimization
         if (topServices.length > 0) {
@@ -467,7 +511,7 @@ class FinOpsAssessmentApp {
             recommendations.push({
                 title: `Optimize ${topService.serviceName} (${topService.percentageOfTotal.toFixed(1)}% of costs)`,
                 description,
-                potentialSavings: `~$${savingsEstimate} USD/90 days`
+                potentialSavings: `~$${savingsEstimate} USD/${analysisDays} days`
             });
         }
 
@@ -512,7 +556,7 @@ class FinOpsAssessmentApp {
             recommendations.push({
                 title: 'Consider Reserved Instances/Capacity',
                 description: 'For consistent compute workloads, Reserved Instances can save 30-72% compared to pay-as-you-go.',
-                potentialSavings: `~$${reservationSavings} USD/90 days`
+                potentialSavings: `~$${reservationSavings} USD/${analysisDays} days`
             });
         }
 
@@ -603,33 +647,27 @@ async function main() {
             process.exit(1);
         }
 
-        // Check if configuration is valid
-        const envPath = path.join(process.cwd(), '.env');
-        const envExists = fs.existsSync(envPath);
-
-        let configValid = false;
-        try {
-            configService.validateRequired();
-            configValid = true;
-        } catch (error) {
-            configValid = false;
+        // Resolve Azure subscription/tenant context at runtime (no hardcoded IDs required)
+        const runtimeContext = await setup.getRuntimeSubscriptionContext();
+        if (!runtimeContext) {
+            console.log('\n❌ Could not resolve Azure subscription context.');
+            process.exit(1);
         }
 
-        // Run interactive setup if config is missing or invalid
-        if (!envExists || !configValid) {
-            console.log('⚠️  Configuration not found or incomplete.\n');
-            const setupSuccess = await setup.run();
+        process.env.AZURE_SUBSCRIPTION_ID = runtimeContext.id;
+        process.env.AZURE_TENANT_ID = runtimeContext.tenantId;
+        process.env.AZURE_SCOPE = `/subscriptions/${runtimeContext.id}`;
 
-            if (!setupSuccess) {
-                console.log('\n❌ Setup failed. Please try again.');
-                process.exit(1);
-            }
+        const selectedHistoricalDays = await setup.chooseAnalysisWindowDays(30);
+        process.env.HISTORICAL_DAYS = String(selectedHistoricalDays);
+        console.log(`✅ Analysis window set to ${selectedHistoricalDays} days`);
 
-            console.log('\nStarting cost analysis...\n');
-            
-            // Reload configuration after setup to pick up new environment variables
-            configService.reload();
-        }
+        await setup.maybePersistDefaultSubscription(runtimeContext);
+
+        // Reload config so all services use the runtime context
+        configService.reload();
+
+        console.log('\nStarting cost analysis...\n');
 
         const app = new FinOpsAssessmentApp();
         await app.run();

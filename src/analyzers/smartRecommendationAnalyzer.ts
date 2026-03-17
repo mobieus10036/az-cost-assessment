@@ -6,7 +6,7 @@
  * - Oversized resources
  */
 
-import { DefaultAzureCredential } from '@azure/identity';
+import { AzureCliCredential } from '@azure/identity';
 import { ComputeManagementClient } from '@azure/arm-compute';
 import { MonitorClient } from '@azure/arm-monitor';
 import { Recommendation, RecommendationSummary } from '../models/recommendation';
@@ -49,7 +49,7 @@ interface VMInfo {
 }
 
 export class SmartRecommendationAnalyzer {
-    private credential: DefaultAzureCredential;
+    private credential: AzureCliCredential;
     private subscriptionId: string;
     private computeClient: ComputeManagementClient;
     private monitorClient: MonitorClient;
@@ -65,8 +65,8 @@ export class SmartRecommendationAnalyzer {
     private readonly START_STOP_PATTERN_THRESHOLD = 5; // VMs with 5+ start/stop events in 30 days are considered scheduled
 
     constructor() {
-        this.credential = new DefaultAzureCredential();
         const config = configService.get();
+        this.credential = new AzureCliCredential({ tenantId: config.azure.tenantId });
         this.subscriptionId = config.azure.subscriptionId;
         this.computeClient = new ComputeManagementClient(this.credential, this.subscriptionId);
         this.monitorClient = new MonitorClient(this.credential, this.subscriptionId);

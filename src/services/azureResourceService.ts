@@ -5,7 +5,7 @@
  */
 
 import { ResourceManagementClient } from '@azure/arm-resources';
-import { DefaultAzureCredential } from '@azure/identity';
+import { AzureCliCredential } from '@azure/identity';
 import { CostManagementClient } from '@azure/arm-costmanagement';
 import { ResourceInventoryItem, ResourceSummary, ResourceUsage } from '../models/resourceUsage';
 import { configService } from '../utils/config';
@@ -14,13 +14,13 @@ import { logInfo, logError, logWarning } from '../utils/logger';
 export class AzureResourceService {
     private client: ResourceManagementClient;
     private costClient: CostManagementClient;
-    private credential: DefaultAzureCredential;
+    private credential: AzureCliCredential;
     private subscriptionId: string;
 
     constructor() {
         const azureConfig = configService.getAzureConfig();
         this.subscriptionId = azureConfig.subscriptionId;
-        this.credential = new DefaultAzureCredential();
+        this.credential = new AzureCliCredential({ tenantId: azureConfig.tenantId });
         this.client = new ResourceManagementClient(this.credential, this.subscriptionId);
         this.costClient = new CostManagementClient(this.credential);
         

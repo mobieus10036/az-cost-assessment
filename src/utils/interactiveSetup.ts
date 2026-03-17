@@ -58,11 +58,78 @@ export class InteractiveSetup {
 
     private async listSubscriptions(): Promise<AzureAccount[]> {
         try {
-            const { stdout } = await execAsync('az account list --output json');
-            return JSON.parse(stdout);
+            const { stdout } = await execAsync('az account list --all --output json');
+            const subscriptions: AzureAccount[] = JSON.parse(stdout);
+            return subscriptions.filter(sub => sub.state?.toLowerCase() === 'enabled');
         } catch {
             return [];
         }
+    }
+
+    private async getAzureCliAccessTokenTenant(): Promise<string | null> {
+        try {
+            const { stdout } = await execAsync('az account get-access-token --resource https://management.azure.com/ --output json');
+            const token = JSON.parse(stdout);
+            return token.tenant || null;
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * Resolve subscription/tenant context at runtime without requiring .env hardcoded IDs.
+     */
+    public async getRuntimeSubscriptionContext(): Promise<AzureAccount | null> {
+        const currentAccount = await this.getCurrentAccount();
+        const subscriptions = await this.listSubscriptions();
+
+        if (subscriptions.length === 0) {
+            console.log('❌ No enabled subscriptions found for this login context.');
+            return null;
+        }
+
+        let selected = currentAccount;
+
+        if (currentAccount) {
+            console.log('📍 Active Azure context:');
+            console.log(`   Subscription: ${currentAccount.name}`);
+            console.log(`   ID: ${currentAccount.id}`);
+            console.log(`   Tenant: ${currentAccount.tenantId}\n`);
+
+            const useCurrent = await this.question('Use this active subscription for this run? (Y/n): ');
+            if (useCurrent.toLowerCase() === 'n') {
+                selected = await this.selectSubscription(subscriptions);
+            }
+        } else {
+            selected = await this.selectSubscription(subscriptions);
+        }
+
+        if (!selected) {
+            return null;
+        }
+
+        // Ensure selected subscription is the active CLI context for downstream SDK auth.
+        try {
+            await execAsync(`az account set --subscription "${selected.id}"`);
+            console.log(`✅ Using subscription: ${selected.name}`);
+        } catch {
+            console.log('❌ Failed to set the selected subscription as active in Azure CLI.');
+            return null;
+        }
+
+        const tokenTenant = await this.getAzureCliAccessTokenTenant();
+        if (tokenTenant && tokenTenant.toLowerCase() !== selected.tenantId.toLowerCase()) {
+            console.log('❌ Azure CLI token tenant does not match selected subscription tenant.');
+            console.log(`   Token tenant: ${tokenTenant}`);
+            console.log(`   Subscription tenant: ${selected.tenantId}`);
+            console.log('   Run the following commands then retry:');
+            console.log('   az account clear');
+            console.log(`   az login --tenant ${selected.tenantId}`);
+            console.log(`   az account set --subscription ${selected.id}`);
+            return null;
+        }
+
+        return selected;
     }
 
     private async loginToAzure(): Promise<boolean> {
@@ -158,6 +225,52 @@ AZURE_TENANT_ID=${subscription.tenantId}
 
         fs.writeFileSync(envPath, envContent, 'utf8');
         console.log(`\n✅ Configuration saved to .env file`);
+    }
+
+    /**
+     * Optionally persist runtime subscription context as default for next runs.
+     */
+    public async maybePersistDefaultSubscription(subscription: AzureAccount): Promise<void> {
+        const remember = await this.question('Remember this subscription as default for future runs? (y/N): ');
+        if (remember.trim().toLowerCase() === 'y') {
+            await this.saveEnvFile(subscription);
+        }
+    }
+
+    /**
+     * Prompt for analysis lookback window.
+     */
+    public async chooseAnalysisWindowDays(defaultDays: number = 30): Promise<number> {
+        console.log('\n🕒 Select analysis lookback window:');
+        console.log('   1) 7 days (incident-focused)');
+        console.log('   2) 30 days (recommended default)');
+        console.log('   3) 90 days (longer trend context)');
+        console.log('   4) Custom days');
+
+        const answer = await this.question(`Choose option [1-4] (default: 2 for ${defaultDays} days): `);
+        const normalized = answer.trim();
+
+        if (!normalized || normalized === '2') {
+            return 30;
+        }
+        if (normalized === '1') {
+            return 7;
+        }
+        if (normalized === '3') {
+            return 90;
+        }
+        if (normalized === '4') {
+            const custom = await this.question('Enter custom number of days (1-365): ');
+            const parsed = parseInt(custom.trim(), 10);
+            if (!Number.isNaN(parsed) && parsed >= 1 && parsed <= 365) {
+                return parsed;
+            }
+            console.log(`⚠️ Invalid custom value. Using default ${defaultDays} days.`);
+            return defaultDays;
+        }
+
+        console.log(`⚠️ Invalid option. Using default ${defaultDays} days.`);
+        return defaultDays;
     }
 
     public async run(): Promise<boolean> {

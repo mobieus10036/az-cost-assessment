@@ -8,6 +8,13 @@ export interface AppConfig {
         subscriptionId: string;
         tenantId: string;
         scope: string;
+        costManagement: {
+            liveDataOnly: boolean;
+            apiDelayMs: number;
+            maxRetries: number;
+            retryBaseDelayMs: number;
+            retryMaxDelayMs: number;
+        };
     };
     storage: {
         accountName: string;
@@ -22,6 +29,8 @@ export interface AppConfig {
         anomalyLookbackDays: number;
         anomalyMinSeverity: 'low' | 'medium' | 'high' | 'critical';
         anomalyMaxDisplay: number;
+        dailyFluctuationThresholdPercent: number;
+        dailyFluctuationMaxDrivers: number;
         costTrendAnalysis: {
             timeFrame: string;
             thresholdPercent: number;
@@ -73,12 +82,40 @@ class ConfigService {
             cfg = {};
         }
         
+        const baseAnalysis = cfg.analysis || {
+            historicalDays: 30,
+            forecastDays: 30,
+            anomalyThresholdPercent: 20,
+            anomalyLookbackDays: 60,
+            anomalyMinSeverity: 'medium',
+            anomalyMaxDisplay: 15,
+            dailyFluctuationThresholdPercent: 15,
+            dailyFluctuationMaxDrivers: 5,
+            costTrendAnalysis: {
+                timeFrame: 'monthly',
+                thresholdPercent: 10,
+            },
+            resourceOptimization: {
+                underutilizationThresholdPercent: 20,
+                oversizedThresholdPercent: 50,
+            },
+        };
+
         // Override with environment variables if present
         return {
             azure: {
                 subscriptionId: process.env.AZURE_SUBSCRIPTION_ID || cfg.azure?.subscriptionId || '',
                 tenantId: process.env.AZURE_TENANT_ID || cfg.azure?.tenantId || '',
                 scope: process.env.AZURE_SCOPE || cfg.azure?.scope || `/subscriptions/${process.env.AZURE_SUBSCRIPTION_ID || cfg.azure?.subscriptionId}`,
+                costManagement: {
+                    liveDataOnly: process.env.AZURE_COST_LIVE_DATA_ONLY
+                        ? process.env.AZURE_COST_LIVE_DATA_ONLY.toLowerCase() === 'true'
+                        : (cfg.azure?.costManagement?.liveDataOnly ?? true),
+                    apiDelayMs: parseInt(process.env.AZURE_COST_API_DELAY_MS || String(cfg.azure?.costManagement?.apiDelayMs || 5000), 10),
+                    maxRetries: parseInt(process.env.AZURE_COST_MAX_RETRIES || String(cfg.azure?.costManagement?.maxRetries || 5), 10),
+                    retryBaseDelayMs: parseInt(process.env.AZURE_COST_RETRY_BASE_DELAY_MS || String(cfg.azure?.costManagement?.retryBaseDelayMs || 15000), 10),
+                    retryMaxDelayMs: parseInt(process.env.AZURE_COST_RETRY_MAX_DELAY_MS || String(cfg.azure?.costManagement?.retryMaxDelayMs || 120000), 10),
+                },
             },
             storage: {
                 accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME || cfg.storage?.accountName || '',
@@ -86,21 +123,12 @@ class ConfigService {
                 tableName: cfg.storage?.tableName || 'FinOpsCostData',
                 useStorage: cfg.storage?.useStorage || false,
             },
-            analysis: cfg.analysis || {
-                historicalDays: 90,
-                forecastDays: 30,
-                anomalyThresholdPercent: 20,
-                anomalyLookbackDays: 60,
-                anomalyMinSeverity: 'medium',
-                anomalyMaxDisplay: 15,
-                costTrendAnalysis: {
-                    timeFrame: 'monthly',
-                    thresholdPercent: 10,
-                },
-                resourceOptimization: {
-                    underutilizationThresholdPercent: 20,
-                    oversizedThresholdPercent: 50,
-                },
+            analysis: {
+                ...baseAnalysis,
+                historicalDays: parseInt(process.env.HISTORICAL_DAYS || String(baseAnalysis.historicalDays || 30), 10),
+                forecastDays: parseInt(process.env.FORECAST_DAYS || String(baseAnalysis.forecastDays || 30), 10),
+                anomalyThresholdPercent: parseInt(process.env.ANOMALY_THRESHOLD_PERCENT || String(baseAnalysis.anomalyThresholdPercent || 20), 10),
+                anomalyLookbackDays: parseInt(process.env.ANOMALY_LOOKBACK_DAYS || String(baseAnalysis.anomalyLookbackDays || 60), 10),
             },
             logging: cfg.logging || {
                 level: process.env.LOG_LEVEL || 'info',
