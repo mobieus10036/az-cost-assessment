@@ -1,5 +1,9 @@
 # AZ Cost Assessment 💸
 
+[![CI](https://github.com/mobieus10036/az-cost-assessment/actions/workflows/ci.yml/badge.svg)](https://github.com/mobieus10036/az-cost-assessment/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/mobieus10036/az-cost-assessment/actions/workflows/codeql.yml/badge.svg)](https://github.com/mobieus10036/az-cost-assessment/actions/workflows/codeql.yml)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot)](https://github.com/mobieus10036/az-cost-assessment/security/dependabot)
+[![Security Policy](https://img.shields.io/badge/security-policy-blue)](SECURITY.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
@@ -90,6 +94,16 @@ The tool will automatically:
 | [VALUE.md](VALUE.md) | Value proposition and use cases |
 | [SECURITY.md](SECURITY.md) | Security policy |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
+
+### Governance
+
+| Document | Purpose |
+|----------|---------|
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution workflow and quality gates |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community standards |
+| [SECURITY.md](SECURITY.md) | Vulnerability reporting and security expectations |
+| [.github/CODEOWNERS](.github/CODEOWNERS) | Required ownership reviews |
+| [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) | Go/no-go release gate |
 
 ---
 

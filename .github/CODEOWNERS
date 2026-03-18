@@ -1,0 +1,7 @@
+# Default owners
+* @mobieus10036
+
+# Security and governance files require maintainer review
+.github/ @mobieus10036
+SECURITY.md @mobieus10036
+CONTRIBUTING.md @mobieus10036
