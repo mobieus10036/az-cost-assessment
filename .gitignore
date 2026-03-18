@@ -33,6 +33,9 @@ scripts/enable-backup-*.ps1
 scripts/update-backup-*.ps1
 scripts/*-operational.ps1
 
+# Local/personal agent definitions (not for public repo)
+.github/agents/
+
 # IDE
 .vscode/
 .idea/
