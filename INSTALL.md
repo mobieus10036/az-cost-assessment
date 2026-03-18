@@ -1,24 +1,18 @@
 # Installation & Setup Instructions
 
-Simple step-by-step guide to get the AZ Cost Assessment running locally. No Azure Storage or other infrastructure needed.
+Simple step-by-step guide to get AZ Cost Assessment running locally.
 
 ## Step-by-Step Setup
 
-### 1. Install Dependencies
+### 1. Install dependencies
 
 ```powershell
 npm install
 ```
 
-This will install all required packages including:
+This installs required packages, including Azure SDKs, TypeScript tooling, logging, and configuration support.
 
-- Azure SDK packages for Cost Management and Resources
-- TypeScript tooling
-- Logging libraries
-- PDF generation
-- Configuration management
-
-### 2. Validate Your Setup
+### 2. Validate your setup
 
 ```powershell
 npm run validate
@@ -27,32 +21,33 @@ npm run validate
 This script checks:
 
 - Node.js version (18+)
-- .env file configuration
-- Azure CLI installation and login
-- Required npm packages
+- Environment configuration readiness
+- Azure CLI availability and login state
+- Installed npm dependencies
 - TypeScript configuration
 - Output directories
 
-### 3. Configure Environment
+### 3. Configure environment (optional)
+
+The app supports interactive subscription selection. You can still set defaults in `.env`.
 
 ```powershell
 # Copy the example environment file
-cp .env.example .env
+Copy-Item .env.example .env
 
-# Edit with your Azure details
-notepad .env   # Windows
-# OR
-nano .env      # Linux/Mac
+# Edit with your Azure details (Windows)
+notepad .env
 ```
 
-Set these required values:
+Recommended values:
 
 ```bash
-AZURE_SUBSCRIPTION_ID=your-subscription-id-here
-AZURE_TENANT_ID=your-tenant-id-here
+AZURE_SUBSCRIPTION_ID=your-subscription-id
+AZURE_TENANT_ID=your-tenant-id
+HISTORICAL_DAYS=30
 ```
 
-To find your subscription ID and tenant ID:
+To locate your subscription and tenant values:
 
 ```powershell
 az login
@@ -62,22 +57,17 @@ az account show
 ### 4. Authenticate with Azure
 
 ```powershell
-# Login to Azure
 az login
-
-# Set your subscription (if you have multiple)
 az account set --subscription "YOUR_SUBSCRIPTION_ID"
-
-# Verify you're logged in
 az account show
 ```
 
-### 5. Verify Permissions
+### 5. Verify permissions
 
-You need these Azure roles:
+Required roles:
 
-- **Cost Management Reader** - to read cost data
-- **Reader** - to list resources
+- **Cost Management Reader** (read cost data)
+- **Reader** (enumerate resources)
 
 Check your permissions:
 
@@ -85,158 +75,100 @@ Check your permissions:
 az role assignment list --assignee YOUR_EMAIL --output table
 ```
 
-If missing, have an admin grant them:
-
-```powershell
-# Cost Management Reader
-az role assignment create \
-  --assignee YOUR_EMAIL \
-  --role "Cost Management Reader" \
-  --scope /subscriptions/YOUR_SUBSCRIPTION_ID
-
-# Reader role
-az role assignment create \
-  --assignee YOUR_EMAIL \
-  --role "Reader" \
-  --scope /subscriptions/YOUR_SUBSCRIPTION_ID
-```
-
-### 6. Run the Cost Analysis
+### 6. Run the analysis
 
 ```powershell
 npm start
 ```
 
-Or for development with auto-reload:
+Development mode:
 
 ```powershell
 npm run dev
 ```
 
-### 7. Review Results
+### 7. Review results
 
-**Console Output**: Comprehensive report displayed in terminal
-
-**JSON Report**: Saved to `reports/cost-analysis-YYYY-MM-DD-HH-mm-ss.json`
-
-**PDF Report**: Visual report saved to `reports/`
-
-**Logs**: Application logs saved to `logs/` directory
-```powershell
-npm run dev
-```
-
-### 7. Review Results
-
-**Console Output**: Comprehensive report displayed in terminal
-
-**JSON Report**: Saved to `reports/cost-analysis-YYYY-MM-DD-HH-mm-ss.json`
-
-**PDF Report**: Visual report saved to `reports/`
-
-**Logs**: Application logs saved to `logs/` directory
+- **Console output**: Summary in terminal
+- **JSON report**: `reports/finops-assessment-<timestamp>.json`
+- **HTML report**: `reports/finops-assessment-<timestamp>.html`
+- **Logs**: `logs/` directory
 
 ## Troubleshooting
 
-### "Cannot find module" errors
+### Dependency errors
 
 ```powershell
-rm -rf node_modules package-lock.json
+Remove-Item -Recurse -Force node_modules
+Remove-Item -Force package-lock.json
 npm install
 ```
 
-### "AZURE_SUBSCRIPTION_ID is required"
+### Missing subscription or tenant settings
 
-- Make sure `.env` file exists
-- Check that values are set (not the placeholder text)
-- Verify no spaces around the `=` sign
+- Confirm `.env` exists if you rely on fixed defaults
+- Confirm values are not placeholders
+- Confirm there are no spaces around `=`
 
-### "Authentication failed"
+### Azure authentication failures
 
 ```powershell
-# Re-login to Azure
 az login
-
-# Make sure you're on the right subscription
 az account show
 az account set --subscription "YOUR_SUBSCRIPTION_ID"
 ```
 
-### TypeScript compilation errors
+### TypeScript build issues
 
 ```powershell
-# Rebuild
 npm run build
-
-# Check for errors
-npx tsc --noEmit
+npm run typecheck
 ```
 
-## Quick Commands Reference
+## Quick command reference
 
 ```powershell
-# Complete setup from scratch
 npm run setup
-
-# Validate configuration
 npm run validate
-
-# Run analysis
 npm start
-
-# Development mode (auto-reload)
 npm run dev
-
-# Build TypeScript
 npm run build
-
-# Run tests
+npm run typecheck
 npm test
 ```
 
-## Directory Structure After Setup
+## Directory structure after setup
 
 ```text
-azure-cost-analyzer/
+az-cost-assessment/
 ├── node_modules/         # Dependencies (after npm install)
-├── dist/                 # Compiled JavaScript (after npm run build)
-├── reports/              # Generated cost analysis reports (local)
+├── reports/              # Generated local reports
 ├── logs/                 # Application logs
-├── .env                  # Your configuration (create from .env.example)
+├── .env                  # Optional defaults (from .env.example)
 └── [source files]
 ```
 
-## What Happens When You Run It?
+## What happens when you run it
 
-1. **Initialization**: Services connect to Azure using CLI credentials
-2. **Data Collection**: Fetches 90 days of historical cost data from Azure
-3. **Analysis**: Calculates trends, detects anomalies, generates forecasts
-4. **Reporting**: Displays summary in console and saves JSON/PDF reports locally
+1. Initialization: authenticates using Azure CLI context
+2. Data collection: retrieves recent cost and resource data
+3. Analysis: trend, anomaly, and optimization logic runs
+4. Reporting: writes summary to console and JSON/HTML report files
 
-Takes about 2 minutes to complete.
+## Next steps
 
-## Next Steps After Installation
+1. Review `README.md` for architecture and governance docs.
+2. Review `QUICKSTART.md` for usage flow.
+3. Customize `config/` settings as needed.
 
-1. **Review the README.md** - Comprehensive documentation
-2. **Check QUICKSTART.md** - Detailed usage guide
-3. **Run the analysis** - See your cost report
-4. **Customize config/** - Adjust analysis settings to your needs
+## Getting help
 
-## Getting Help
-
-- Check the main README.md for detailed documentation
-- Review QUICKSTART.md for common scenarios
-- Run `npm run validate` to check your setup
-- Check `logs/` directory for error details
+- Run `npm run validate`
+- Check `logs/` for error details
+- Review `README.md` and `QUICKSTART.md`
 
 ---
 
-**Estimated Setup Time**: 10-15 minutes
+Estimated setup time: 10-15 minutes.
 
-**Prerequisites**: Node.js 18+, Azure subscription, Azure CLI
-
-Ready to start? Run:
-
-```powershell
-npm run setup
-```
+Prerequisites: Node.js 18+, Azure subscription, Azure CLI.

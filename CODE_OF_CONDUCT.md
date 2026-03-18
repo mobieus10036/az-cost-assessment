@@ -21,18 +21,18 @@ Examples of behavior that contributes to a positive environment include:
 - Giving and gracefully accepting constructive feedback
 - Accepting responsibility and apologizing to those affected by mistakes
 - Focusing on what is best not just for us as individuals, but for the
-	overall community
+  overall community
 
 Examples of unacceptable behavior include:
 
 - The use of sexualized language or imagery, and sexual attention or
-	advances of any kind
+  advances of any kind
 - Trolling, insulting or derogatory comments, and personal or political attacks
 - Public or private harassment
 - Publishing others' private information, such as a physical or email
-	address, without their explicit permission
+  address, without their explicit permission
 - Other conduct which could reasonably be considered inappropriate in a
-	professional setting
+  professional setting
 
 ## Enforcement Responsibilities
 

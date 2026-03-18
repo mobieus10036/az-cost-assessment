@@ -9,9 +9,11 @@ Security fixes are provided for the latest `main` branch and the most recent rel
 Please do not file public issues for suspected vulnerabilities.
 
 Use GitHub private vulnerability reporting:
+
 - [Repository Security Advisories](https://github.com/mobieus10036/az-cost-assessment/security/advisories)
 
 If private reporting is unavailable, contact the maintainer directly and include:
+
 - Reproduction steps
 - Impact and affected scope
 - Proposed mitigation (if known)
