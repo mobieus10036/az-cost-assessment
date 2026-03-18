@@ -21,6 +21,9 @@ Fixes #(issue number)
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] No sensitive data (credentials, subscription IDs) is included
+- [ ] My commits are signed and verified
+- [ ] I did not commit generated artifacts (`reports/`, `logs/`, temp query files)
+- [ ] I reviewed dependency and security impact for this change
 
 ## Testing
 Describe the tests you ran to verify your changes.
