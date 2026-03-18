@@ -17,31 +17,37 @@
 ## ✨ Features
 
 ### 🎯 Specialized Investigation Features
+
 - **Daily fluctuation attribution (primary feature)** — Detect significant day-over-day changes and identify the services that drove the delta
 - **Driver ranking** — Rank top service contributors for each fluctuation day pair
 - **Evidence-first outputs** — Show previous day cost, current day cost, and service-level delta in console, JSON, and HTML report
 
 ### 📊 Supporting Cost Intelligence
+
 - **30-day historical analysis (default)** — Full spending breakdown by service, resource, and resource group
 - **Daily cost tracking** — Granular day-by-day spending with 14-day rolling view
 - **Month-over-month comparison** — Track trends across 3 months with projections
 
 ### 🔮 Predictive Analytics  
+
 - **30-day forecasting** — Trend-based cost predictions with confidence indicators
 - **Moving averages** — 7-day and 30-day moving averages for trend smoothing
 - **Projected month-end** — Estimate your bill before it arrives
 
 ### 🚨 Anomaly Detection
+
 - **Statistical analysis** — Z-score based anomaly detection
 - **Severity classification** — Critical, High, Medium, Low severity ratings
 - **Actionable alerts** — Recommendations for each detected anomaly
 
 ### 💡 Smart Recommendations
+
 - **Unattached disk detection** — Find and clean up orphaned storage
 - **Stopped VM analysis** — Identify VMs that could be deleted or right-sized
 - **Savings estimation** — Monthly and annual savings projections
 
 ### 📈 Reporting
+
 - **Professional HTML reports** — Beautiful, shareable cost analysis documents
 - **JSON export** — Programmatic access for automation and integrations
 - **Console output** — Rich, colorized terminal display
@@ -61,6 +67,7 @@ npm start
 ```
 
 The tool will automatically:
+
 1. ✅ Check Azure CLI installation
 2. 🔐 Prompt for Azure login if needed
 3. 📋 Let you select your subscription for this run
@@ -76,7 +83,7 @@ The tool will automatically:
 ## 📋 Prerequisites
 
 | Requirement | Version | Notes |
-|-------------|---------|-------|
+| ----------- | ------- | ----- |
 | Node.js | ≥18.0.0 | LTS recommended |
 | npm | ≥9.0.0 | Comes with Node.js |
 | Azure CLI | Latest | For authentication |
@@ -87,29 +94,28 @@ The tool will automatically:
 ## 📖 Documentation
 
 | Document | Description |
-|----------|-------------|
+| -------- | ----------- |
 | [QUICKSTART.md](QUICKSTART.md) | Get running in under 2 minutes |
 | [INSTALL.md](INSTALL.md) | Detailed installation guide |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines |
-| [VALUE.md](VALUE.md) | Value proposition and use cases |
 | [SECURITY.md](SECURITY.md) | Security policy |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
 
 ### Governance
 
 | Document | Purpose |
-|----------|---------|
+| -------- | ------- |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution workflow and quality gates |
 | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community standards |
 | [SECURITY.md](SECURITY.md) | Vulnerability reporting and security expectations |
-| [.github/CODEOWNERS](.github/CODEOWNERS) | Required ownership reviews |
+| [.github/CODEOWNERS](.github/CODEOWNERS) | Ownership mapping |
 | [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) | Go/no-go release gate |
 
 ---
 
 ## 🏗️ Architecture
 
-```
+```text
 az-cost-assessment/
 ├── src/
 │   ├── app.ts                 # Main application entry
@@ -177,7 +183,7 @@ Edit `config/default.json` to customize:
 
 ## 📊 Sample Output
 
-```
+```text
 ============================================================
 AZURE FINOPS ASSESSMENT REPORT
 ============================================================
@@ -245,4 +251,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ by the Mobieus team**
+Made by the Mobieus team.
