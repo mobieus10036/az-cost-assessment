@@ -16,7 +16,8 @@ Thank you for helping improve this project.
    - `npm run typecheck`
    - `npm run build`
    - `npm test`
-4. Open a pull request using the provided template
+4. Sign your commits with GPG (`git commit -S -m "your message"`) — unsigned commits are blocked by CI
+5. Open a pull request using the provided template
 
 ## Commit and branch policy
 
