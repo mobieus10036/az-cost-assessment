@@ -87,7 +87,7 @@ The tool will automatically:
 | Node.js | ≥18.0.0 | LTS recommended |
 | npm | ≥9.0.0 | Comes with Node.js |
 | Azure CLI | Latest | For authentication |
-| Azure RBAC | Cost Management Reader | Required permissions |
+| Azure RBAC | Cost Management Reader + Reader | Required for cost data and resource enumeration |
 
 ---
 
@@ -121,8 +121,8 @@ az-cost-assessment/
 │   ├── app.ts                 # Main application entry
 │   ├── analyzers/             # Analysis engines
 │   │   ├── anomalyDetector.ts
-│   │   ├── costTrendAnalyzer.ts
-│   │   ├── smartRecommendationAnalyzer.ts
+│   │   ├── costTrendAnalyzer.ts│   │   ├── dailyCostFluctuationAnalyzer.ts
+│   │   ├── resourceOptimizationAnalyzer.ts│   │   ├── smartRecommendationAnalyzer.ts
 │   │   └── vmCostAnalyzer.ts
 │   ├── services/              # Azure API integrations
 │   │   ├── azureCostManagementService.ts
@@ -218,7 +218,7 @@ Potential Annual Savings: $5,400.00 USD
 
 - **Never commit `.env`** — Contains your Azure credentials
 - **Reports are gitignored** — Contain subscription-specific data
-- **Use least privilege** — Only Cost Management Reader role needed
+- **Use least privilege** — Assign both Cost Management Reader and Reader roles; no broader access is needed
 - **Review before sharing** — Check reports for sensitive resource names
 
 See [SECURITY.md](SECURITY.md) for our security policy.
@@ -231,7 +231,7 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for gui
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
+3. Commit your changes (`git commit -S -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 

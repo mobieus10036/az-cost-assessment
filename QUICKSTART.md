@@ -4,6 +4,9 @@ Get your Azure cost analysis running in **under 2 minutes**! No manual configura
 
 ## Prerequisites
 
+- **Node.js** ≥18.0.0 (LTS recommended — [nodejs.org](https://nodejs.org/))
+- **Azure CLI** (latest) — [Install guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
+- An **Azure subscription** with the **Cost Management Reader** and **Reader** roles assigned to your account
 
 That's it! The tool will guide you through the rest interactively.
 
@@ -112,8 +115,8 @@ Average Daily Spend: $101.94 USD
    Consider Reserved Instances...
    💰 Potential Savings: ~$667.77 USD/30 days
 ============================================================
-✓ Report saved to: reports/cost-analysis-2025-11-16.json
-✓ PDF report saved to: reports/cost-analysis-2025-11-16.pdf
+✓ JSON report saved to: reports/cost-analysis-2025-11-16.json
+✓ HTML report saved to:  reports/cost-analysis-2025-11-16.html
 ============================================================
 ```
 
@@ -131,9 +134,9 @@ It will use your saved configuration automatically.
 
 Want to analyze a different subscription?
 
-```bash
+```powershell
 # Delete the saved config
-rm .env
+Remove-Item .env
 
 # Run again - you'll be prompted to choose
 npm start
@@ -149,7 +152,7 @@ npm run setup
 
 ### "Azure CLI is not installed"
 
-Install it from: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
+Install it from: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
 
 ### "No subscriptions found"
 
@@ -188,9 +191,9 @@ Edit `config/default.json` to customize analysis settings:
 ```json
 {
   "analysis": {
-   "historicalDays": 30,           // Days of history to analyze
-    "forecastDays": 30,              // Days to forecast
-    "anomalyThresholdPercent": 20    // Anomaly detection sensitivity
+    "historicalDays": 30,
+    "forecastDays": 30,
+    "anomalyThresholdPercent": 20
   }
 }
 ```
