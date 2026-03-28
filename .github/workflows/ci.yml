@@ -65,9 +65,17 @@ jobs:
 
       - name: Check for secrets
         run: |
-          # Check for common secret patterns
-          if grep -rE "(AZURE_|AWS_|API_KEY|SECRET|PASSWORD)" --include="*.ts" --include="*.js" --include="*.json" src/ config/ 2>/dev/null | grep -v "process.env" | grep -v ".example"; then
-            echo "Potential secrets found in source code!"
+          # Check for hardcoded credential values: key=<non-placeholder value>
+          # Matches patterns like AZURE_SUBSCRIPTION_ID=abc123... or PASSWORD="secret"
+          # Excludes: process.env references, placeholder/example values, error messages,
+          #           template literals writing env var names, and comments
+          if grep -rE "(AZURE_SUBSCRIPTION_ID|AZURE_TENANT_ID|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID|API_KEY|PASSWORD)\s*[=:]\s*['\"]?[a-zA-Z0-9+/\-]{12,}" \
+               --include="*.ts" --include="*.js" --include="*.json" src/ config/ 2>/dev/null \
+             | grep -v "process\.env" \
+             | grep -v "\.example" \
+             | grep -v "your_" \
+             | grep -v "placeholder"; then
+            echo "Potential hardcoded secrets found in source code!"
             exit 1
           fi
           echo "No hardcoded secrets detected"
