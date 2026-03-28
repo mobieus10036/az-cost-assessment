@@ -177,13 +177,22 @@ export class InteractiveSetup {
                 return false;
             }
         } else {
-            // Show current account info
+            // Show current account info and always offer re-authentication option
             const currentAccount = await this.getCurrentAccount();
             if (currentAccount) {
-                console.log(`✅ Logged in as: ${currentAccount.name}`);
+                console.log(`✅ Already logged in as: ${currentAccount.name}`);
+                console.log(`   Tenant:       ${currentAccount.tenantId}`);
                 console.log(`   Subscription: ${currentAccount.id}\n`);
             } else {
-                console.log('✅ Azure CLI authenticated\n');
+                console.log('✅ Azure CLI has an active session\n');
+            }
+
+            const relogin = await this.question('Login with a different account or tenant? (y/N): ');
+            if (relogin.trim().toLowerCase() === 'y') {
+                const loginSuccess = await this.loginToAzure();
+                if (!loginSuccess) {
+                    return false;
+                }
             }
         }
         
