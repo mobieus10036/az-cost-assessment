@@ -49,14 +49,14 @@
     "@azure/identity": "^4.5.0",
     "@azure/storage-blob": "^12.25.0",
     "chalk": "^4.1.2",
-    "config": "^3.3.12",
+    "config": "^4.4.1",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",
     "uuid": "^13.0.0",
     "winston": "^3.15.0"
   },
   "devDependencies": {
-    "@types/config": "^3.3.5",
+    "@types/config": "^4.4.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.9.1",
     "@types/uuid": "^10.0.0",
