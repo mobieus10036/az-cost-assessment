@@ -32,7 +32,7 @@ That's it! The tool will:
 2. 🔐 Prompt you to login to Azure (if needed)
 3. 📋 Show your subscriptions and let you choose
 4. 💾 Save your selection automatically
-5. 📊 Run the cost analysis
+5. 📊 Run the focused daily spend change analysis
 
 ## First Run Example
 
@@ -79,44 +79,49 @@ Starting cost analysis...
 
 After setup, the analyzer will:
 
-⏱️ **Takes about 2 minutes total**
+⏱️ **Usually takes under a minute for the default report**
 
-1. Query 30 days of historical costs
-2. Analyze trends and patterns
-3. Detect cost anomalies
-4. Generate 30-day forecasts
-5. Provide smart recommendations
-6. Save reports to `reports/` folder
+1. Query recent daily costs grouped by Azure service
+2. Calculate day-over-day spend changes
+3. Attribute the largest changes to contributing services
+4. Save a JSON report to the `reports/` folder
+
+Largest daily changes compare complete days only. Today's partial spend is still shown in daily totals, but it is not used to flag fluctuations.
+
+For the broader legacy assessment with trends, recommendations, VM analysis, and HTML output, run:
+
+```bash
+npm run full
+```
 
 ## Output Example
 
 ```
 ============================================================
-AZURE COST ANALYZER REPORT
+AZURE SPEND CHANGES
 ============================================================
 
-📊 COST SUMMARY
+SUMMARY
 ------------------------------------------------------------
 Subscription: Production Subscription
-Historical Total (30 days): $9,425.98 USD
+Total Spend: $9,425.98 USD
 Current Month to Date: $972.25 USD
-Estimated Month End: $2,739.99 USD
 Average Daily Spend: $101.94 USD
 
-💰 TOP EXPENSIVE SERVICES
+LARGEST DAILY CHANGES
+------------------------------------------------------------
+1. 2026-05-13 -> 2026-05-14 ^ $412.19 (+38.4%)
+   + Virtual Machines: $260.10 (+52.1%)
+   + Azure OpenAI: $91.44 (+34.7%)
+   + Log Analytics: $42.02 (+18.9%)
+
+TOP SERVICES THIS PERIOD
 ------------------------------------------------------------
 1. Virtual Machines          $3,338.83 (35.4%)
 2. Storage                   $3,176.35 (33.7%)
 3. Microsoft Defender        $895.67 (9.5%)
 
-💡 RECOMMENDATIONS
-------------------------------------------------------------
-1. 🖥️ Optimize Virtual Machines (35.4% of costs)
-   Consider Reserved Instances...
-   💰 Potential Savings: ~$667.77 USD/30 days
-============================================================
-✓ JSON report saved to: reports/cost-analysis-2025-11-16.json
-✓ HTML report saved to:  reports/cost-analysis-2025-11-16.html
+✓ Daily spend JSON report saved to: reports/daily-spend-changes-2026-05-15T20-00-00.json
 ============================================================
 ```
 

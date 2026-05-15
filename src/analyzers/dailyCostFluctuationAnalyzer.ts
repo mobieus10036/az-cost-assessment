@@ -6,6 +6,7 @@
 import {
     ComprehensiveCostAnalysis,
     DailyCostFluctuation,
+    DailyCostFluctuationInput,
     DailyServiceCostPoint,
     ServiceCostDelta
 } from '../models/costAnalysis';
@@ -23,14 +24,21 @@ export class DailyCostFluctuationAnalyzer {
     }
 
     public analyzeFluctuations(analysis: ComprehensiveCostAnalysis): DailyCostFluctuation[] {
-        const dailyCosts = [...analysis.historical.dailyCosts]
+        return this.analyze({
+            dailyCosts: analysis.historical.dailyCosts,
+            dailyServiceCosts: analysis.historical.dailyServiceCosts || []
+        });
+    }
+
+    public analyze(input: DailyCostFluctuationInput): DailyCostFluctuation[] {
+        const dailyCosts = [...input.dailyCosts]
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         if (dailyCosts.length < 2) {
             return [];
         }
 
-        const dailyServiceMap = this.buildDailyServiceMap(analysis.historical.dailyServiceCosts || []);
+        const dailyServiceMap = this.buildDailyServiceMap(input.dailyServiceCosts || []);
         const fluctuations: DailyCostFluctuation[] = [];
 
         for (let i = 1; i < dailyCosts.length; i++) {

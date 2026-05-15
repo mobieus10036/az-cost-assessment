@@ -6,15 +6,15 @@
  */
 
 import { AzureCostManagementService } from './services/azureCostManagementService';
-import { AzureResourceService } from './services/azureResourceService';
 import { CostTrendAnalyzer } from './analyzers/costTrendAnalyzer';
 import { AnomalyDetector } from './analyzers/anomalyDetector';
 import { DailyCostFluctuationAnalyzer } from './analyzers/dailyCostFluctuationAnalyzer';
 import { SmartRecommendationAnalyzer } from './analyzers/smartRecommendationAnalyzer';
 import { VMCostAnalyzer } from './analyzers/vmCostAnalyzer';
 import { HtmlReportGenerator } from './services/htmlReportGenerator';
+import { DailySpendService } from './services/dailySpendService';
 import { VMCostSummary } from './models/vmCostAnalysis';
-import { ComprehensiveCostAnalysis, DailyCostFluctuation } from './models/costAnalysis';
+import { ComprehensiveCostAnalysis, DailyCostFluctuation, DailySpendChangeReport } from './models/costAnalysis';
 import { logInfo, logError } from './utils/logger';
 import { configService } from './utils/config';
 import { InteractiveSetup } from './utils/interactiveSetup';
@@ -25,38 +25,51 @@ import { colors, getSeverityColor, getTrendColor, getChangeColor, formatCurrency
 
 class FinOpsAssessmentApp {
     private costService: AzureCostManagementService;
-    private resourceService: AzureResourceService;
-    private trendAnalyzer: CostTrendAnalyzer;
-    private anomalyDetector: AnomalyDetector;
     private dailyFluctuationAnalyzer: DailyCostFluctuationAnalyzer;
-    private smartRecommendations: SmartRecommendationAnalyzer;
-    private vmCostAnalyzer: VMCostAnalyzer;
-    private htmlGenerator: HtmlReportGenerator;
+    private dailySpendService: DailySpendService;
 
     constructor() {
         logInfo('='.repeat(60));
         logInfo('Azure FinOps Assessment PoC');
         logInfo('='.repeat(60));
 
-        // Initialize services
         this.costService = new AzureCostManagementService();
-        this.resourceService = new AzureResourceService();
-        this.trendAnalyzer = new CostTrendAnalyzer();
-        this.anomalyDetector = new AnomalyDetector();
         this.dailyFluctuationAnalyzer = new DailyCostFluctuationAnalyzer();
-        this.smartRecommendations = new SmartRecommendationAnalyzer();
-        this.vmCostAnalyzer = new VMCostAnalyzer();
-        this.htmlGenerator = new HtmlReportGenerator();
+        this.dailySpendService = new DailySpendService(this.costService, this.dailyFluctuationAnalyzer);
 
-        logInfo('All services initialized successfully');
+        logInfo('Daily spend services initialized successfully');
+    }
+
+    /**
+     * Run the default focused daily spend-change workflow
+     */
+    public async run(): Promise<void> {
+        try {
+            logInfo('Starting daily spend change analysis...\n');
+
+            const report = await this.dailySpendService.buildReport();
+            this.displayDailySpendChangeReport(report);
+            await this.saveDailySpendResults(report);
+
+            logInfo('\n' + '='.repeat(60));
+            logInfo('Daily spend change analysis completed successfully!');
+            logInfo('='.repeat(60));
+        } catch (error) {
+            logError(`Fatal error during daily spend change analysis: ${error}`);
+            throw error;
+        }
     }
 
     /**
      * Run the complete FinOps assessment
      */
-    public async run(): Promise<void> {
+    public async runFullAssessment(): Promise<void> {
         try {
             logInfo('Starting FinOps assessment...\n');
+            const trendAnalyzer = new CostTrendAnalyzer();
+            const anomalyDetector = new AnomalyDetector();
+            const smartRecommendations = new SmartRecommendationAnalyzer();
+            const vmCostAnalyzer = new VMCostAnalyzer();
 
             // Step 1: Gather comprehensive cost analysis
             logInfo('Step 1: Gathering cost data...');
@@ -65,12 +78,12 @@ class FinOpsAssessmentApp {
 
             // Step 2: Analyze cost trends
             logInfo('Step 2: Analyzing cost trends...');
-            costAnalysis.trends = this.trendAnalyzer.analyzeTrends(costAnalysis);
+            costAnalysis.trends = trendAnalyzer.analyzeTrends(costAnalysis);
             logInfo(`[OK] Identified ${costAnalysis.trends.length} trends\n`);
 
             // Step 3: Detect cost anomalies
             logInfo('Step 3: Detecting cost anomalies...');
-            costAnalysis.anomalies = this.anomalyDetector.detectAnomalies(costAnalysis);
+            costAnalysis.anomalies = anomalyDetector.detectAnomalies(costAnalysis);
             logInfo(`[OK] Detected ${costAnalysis.anomalies.length} anomalies\n`);
 
             // Step 4: Attribute daily cost fluctuations to services
@@ -80,15 +93,15 @@ class FinOpsAssessmentApp {
 
             // Step 5: Generate smart recommendations
             logInfo('Step 5: Generating smart recommendations...');
-            const recommendations = await this.smartRecommendations.analyze();
-            const recommendationSummary = this.smartRecommendations.generateSummary(recommendations);
+            const recommendations = await smartRecommendations.analyze();
+            const recommendationSummary = smartRecommendations.generateSummary(recommendations);
             logInfo(`[OK] Generated ${recommendations.length} recommendations (potential savings: $${recommendationSummary.totalPotentialMonthlySavings.toFixed(2)}/month)\n`);
 
             // Step 6: Analyze VM costs
             logInfo('Step 6: Analyzing per-VM costs...');
             let vmCostSummary: VMCostSummary | undefined;
             try {
-                vmCostSummary = await this.vmCostAnalyzer.analyzeVMCosts(90);
+                vmCostSummary = await vmCostAnalyzer.analyzeVMCosts(90);
                 logInfo(`[OK] Analyzed costs for ${vmCostSummary.topCostVMs.length} VMs (total: $${vmCostSummary.totalVMCost.toFixed(2)}, potential savings: $${vmCostSummary.totalPotentialSavings.toFixed(2)}/month)\n`);
             } catch (error) {
                 logInfo(`[WARN] VM cost analysis skipped: ${error}\n`);
@@ -109,6 +122,71 @@ class FinOpsAssessmentApp {
             logError(`Fatal error during assessment: ${error}`);
             throw error;
         }
+    }
+
+    private displayDailySpendChangeReport(report: DailySpendChangeReport): void {
+        const currency = report.summary.currency;
+
+        console.log('\n' + colors.separator('='.repeat(60)));
+        console.log(colors.header('AZURE SPEND CHANGES'));
+        console.log(colors.separator('='.repeat(60)));
+        console.log(colors.label('Subscription ID: ') + colors.dim(report.summary.subscriptionId));
+        console.log(colors.label('Scope:           ') + colors.dim(report.summary.scope));
+        console.log(colors.label('Period:          ') + colors.dim(`${report.summary.startDate.split('T')[0]} to ${report.summary.endDate.split('T')[0]}`));
+        console.log('');
+        console.log(colors.label('Total Spend:        ') + formatCurrency(report.summary.totalCost, currency));
+        console.log(colors.label('Month to Date:      ') + formatCurrency(report.summary.monthToDateCost, currency));
+        console.log(colors.label('Average Daily:      ') + formatCurrency(report.summary.averageDailyCost, currency));
+
+        if (report.summary.peakDailyCost) {
+            console.log(colors.label('Peak Daily Spend:   ') + `${formatCurrency(report.summary.peakDailyCost.cost, currency)} ${colors.dim(`on ${report.summary.peakDailyCost.date.split('T')[0]}`)}`);
+        }
+
+        console.log('\n' + colors.subheader('DAILY SPEND (RECENT)'));
+        console.log(colors.separator('-'.repeat(60)));
+        report.dailyCosts.slice(-14).forEach(day => {
+            const date = format(new Date(day.date), 'MMM dd, yyyy (EEE)');
+            const padding = ' '.repeat(Math.max(0, 25 - date.length));
+            console.log(`${colors.dim(date)}${padding}${colors.value(formatCurrency(day.cost, day.currency))}`);
+        });
+
+        console.log('\n' + colors.subheader('LARGEST DAILY CHANGES (COMPLETE DAYS ONLY)'));
+        console.log(colors.separator('-'.repeat(60)));
+
+        if (report.fluctuations.length === 0) {
+            console.log(colors.dim('No significant daily changes found at the configured threshold.'));
+        } else {
+            report.fluctuations.slice(0, 7).forEach((fluctuation, index) => {
+                const symbol = fluctuation.totalChangeAmount >= 0 ? '^' : 'v';
+                const changeText = `${symbol} ${formatCurrency(fluctuation.totalChangeAmount, currency)} (${formatPercentChange(fluctuation.totalChangePercent)})`;
+                const changeColor = getChangeColor(fluctuation.totalChangePercent);
+                console.log(`${colors.label(`${index + 1}. ${fluctuation.previousDate.split('T')[0]} -> ${fluctuation.date.split('T')[0]}`)} ${changeColor(changeText)}`);
+
+                fluctuation.topServiceDrivers.slice(0, 5).forEach(driver => {
+                    const driverSymbol = driver.changeAmount >= 0 ? '+' : '-';
+                    const driverChange = `${driverSymbol} ${driver.serviceName}: ${formatCurrency(Math.abs(driver.changeAmount), currency)} (${formatPercentChange(driver.changePercent)})`;
+                    console.log(colors.dim(`   ${driverChange}`));
+                });
+                console.log('');
+            });
+        }
+
+        console.log('\n' + colors.subheader('TOP SERVICES THIS PERIOD'));
+        console.log(colors.separator('-'.repeat(60)));
+
+        if (report.serviceTotals.length === 0) {
+            console.log(colors.dim('No service cost data available.'));
+        } else {
+            report.serviceTotals.slice(0, 10).forEach((service, index) => {
+                const padding = ' '.repeat(Math.max(0, 35 - service.serviceName.length));
+                const pctStr = colors.dim(`(${service.percentageOfTotal.toFixed(1)}%)`);
+                console.log(`${colors.dim(index + 1 + '.')} ${colors.info(service.serviceName)}${padding}${formatCurrency(service.cost, service.currency)} ${pctStr}`);
+            });
+        }
+
+        console.log('\n' + colors.dim(`Data source: ${report.dataProvenance.source} (${report.dataProvenance.mode.toUpperCase()}); fake data is never used.`));
+        console.log(colors.dim('Run with --full for the legacy comprehensive assessment, recommendations, VM analysis, and HTML report.'));
+        console.log(colors.separator('='.repeat(60)));
     }
 
     /**
@@ -576,6 +654,25 @@ class FinOpsAssessmentApp {
         return recommendations.slice(0, 6); // Return top 6 recommendations
     }
 
+    private async saveDailySpendResults(report: DailySpendChangeReport): Promise<void> {
+        try {
+            const outputDir = path.join(process.cwd(), 'reports');
+
+            if (!fs.existsSync(outputDir)) {
+                fs.mkdirSync(outputDir, { recursive: true });
+            }
+
+            const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
+            const jsonFilename = `daily-spend-changes-${timestamp}.json`;
+            const jsonFilepath = path.join(outputDir, jsonFilename);
+
+            fs.writeFileSync(jsonFilepath, JSON.stringify(report, null, 2));
+            logInfo(`\n${colors.success('[OK]')} Daily spend JSON report saved to: ${jsonFilepath}`);
+        } catch (error) {
+            logError(`Error saving daily spend results: ${error}`);
+        }
+    }
+
     /**
      * Save assessment results to JSON file
      */
@@ -619,7 +716,8 @@ class FinOpsAssessmentApp {
             const htmlFilename = `finops-assessment-${timestamp}.html`;
             const htmlFilepath = path.join(outputDir, htmlFilename);
             
-            const htmlContent = this.htmlGenerator.generate(
+            const htmlGenerator = new HtmlReportGenerator();
+            const htmlContent = htmlGenerator.generate(
                 costAnalysis,
                 recommendations,
                 recommendationSummary,
@@ -670,7 +768,11 @@ async function main() {
         console.log('\nStarting cost analysis...\n');
 
         const app = new FinOpsAssessmentApp();
-        await app.run();
+        if (process.argv.includes('--full')) {
+            await app.runFullAssessment();
+        } else {
+            await app.run();
+        }
         process.exit(0);
     } catch (error) {
         logError(`Application error: ${error}`);

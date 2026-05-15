@@ -39,8 +39,35 @@ export interface DailyCostFluctuation {
     topServiceDrivers: ServiceCostDelta[];
 }
 
+export interface DailyCostFluctuationInput {
+    dailyCosts: CostDataPoint[];
+    dailyServiceCosts: DailyServiceCostPoint[];
+}
+
+export interface DailySpendSummary {
+    subscriptionId: string;
+    scope: string;
+    startDate: string;
+    endDate: string;
+    currency: string;
+    totalCost: number;
+    monthToDateCost: number;
+    averageDailyCost: number;
+    peakDailyCost: CostDataPoint | null;
+    lowestDailyCost: CostDataPoint | null;
+}
+
+export interface DailySpendChangeReport {
+    generatedAt: string;
+    summary: DailySpendSummary;
+    dailyCosts: CostDataPoint[];
+    serviceTotals: CostByService[];
+    fluctuations: DailyCostFluctuation[];
+    dataProvenance: DataProvenance;
+}
+
 export interface DataProvenance {
-    mode: 'live' | 'fallback';
+    mode: 'live';
     source: string;
     generatedFromFallback: boolean;
     queryPolicy: {
