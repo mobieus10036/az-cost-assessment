@@ -1,3 +1,5 @@
+
+
 # AZ Cost Assessment 💸
 
 [![CI](https://github.com/mobieus10036/az-cost-assessment/actions/workflows/ci.yml/badge.svg)](https://github.com/mobieus10036/az-cost-assessment/actions/workflows/ci.yml)
@@ -8,7 +10,7 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 
-**A specialized Azure spend investigation tool for one critical admin question:** when daily Azure costs move, which services caused the change?
+**A specialized Azure FinOps investigation tool for critical cost questions.** Start with one high-value question: when daily costs move, which service caused it?
 
 > 🚀 Part of the Mobieus Rapid Assessment Suite — Accelerate your Azure security and cost insights.
 
@@ -16,13 +18,11 @@
 
 ## ✨ Features
 
-### 🎯 Default Investigation Workflow
+### 🎯 Specialized Investigation Features
 
 - **Daily fluctuation attribution (primary feature)** — Detect significant day-over-day changes and identify the services that drove the delta
-- **Complete-day comparisons** — Exclude the current partial day from fluctuation detection to avoid false alerts
 - **Driver ranking** — Rank top service contributors for each fluctuation day pair
-- **Evidence-first outputs** — Show previous day cost, current day cost, and service-level delta in console and JSON
-- **Fast default path** — Uses a focused daily-by-service Cost Management query instead of running every analysis engine
+- **Evidence-first outputs** — Show previous day cost, current day cost, and service-level delta in console, JSON, and HTML report
 
 ### 📊 Supporting Cost Intelligence
 
@@ -64,11 +64,8 @@ git clone https://github.com/mobieus10036/az-cost-assessment.git
 cd az-cost-assessment
 npm install
 
-# Run the focused daily spend change report (interactive setup on first run)
+# Run (interactive setup on first run)
 npm start
-
-# Optional: run the legacy comprehensive assessment
-npm run full
 ```
 
 The tool will automatically:
@@ -79,7 +76,7 @@ The tool will automatically:
 4. ⚙️ Use selected subscription/tenant context at runtime (no hardcoded IDs required)
 5. 🕒 Let you choose analysis window (`7`, `30`, `90`, or custom; default `30`)
 6. 💾 Optionally save selected subscription as default for future runs
-7. 📊 Generate a focused daily spend change report
+7. 📊 Generate comprehensive cost analysis
 
 **See [QUICKSTART.md](QUICKSTART.md) for detailed walkthrough.**
 
@@ -154,15 +151,15 @@ If you want a fixed default context, copy `.env.example` to `.env` and configure
 AZURE_SUBSCRIPTION_ID=your-subscription-id
 AZURE_TENANT_ID=your-tenant-id
 HISTORICAL_DAYS=30
+AZURE_COST_LIVE_DATA_ONLY=true
 AZURE_COST_API_DELAY_MS=5000
 AZURE_COST_MAX_RETRIES=5
 ```
 
 ### Live Data Integrity
 
-- The app always uses **live Azure Cost Management data**.
-- If Azure Cost Management API requests fail, report generation stops instead of using fake or synthetic data.
-- Largest daily changes compare complete days only; the current partial day remains visible in daily totals.
+- The app is configured for **live data only** by default.
+- If Azure Cost Management API requests fail, report generation stops instead of using synthetic data.
 - Throttling controls are configurable to trade speed for reliability:
   - `AZURE_COST_API_DELAY_MS`
   - `AZURE_COST_MAX_RETRIES`
@@ -183,12 +180,6 @@ Edit `config/default.json` to customize:
   }
 }
 ```
-
-### Default vs Full Mode
-
-`npm start` answers the fastest admin question first: daily spend changes and the services contributing to those changes.
-
-`npm run full` runs the broader legacy assessment with trends, statistical anomaly detection, recommendations, VM analysis, JSON export, and HTML reporting.
 
 ---
 
