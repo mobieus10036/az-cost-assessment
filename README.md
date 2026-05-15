@@ -19,6 +19,7 @@
 ### 🎯 Default Investigation Workflow
 
 - **Daily fluctuation attribution (primary feature)** — Detect significant day-over-day changes and identify the services that drove the delta
+- **Complete-day comparisons** — Exclude the current partial day from fluctuation detection to avoid false alerts
 - **Driver ranking** — Rank top service contributors for each fluctuation day pair
 - **Evidence-first outputs** — Show previous day cost, current day cost, and service-level delta in console and JSON
 - **Fast default path** — Uses a focused daily-by-service Cost Management query instead of running every analysis engine
@@ -153,15 +154,15 @@ If you want a fixed default context, copy `.env.example` to `.env` and configure
 AZURE_SUBSCRIPTION_ID=your-subscription-id
 AZURE_TENANT_ID=your-tenant-id
 HISTORICAL_DAYS=30
-AZURE_COST_LIVE_DATA_ONLY=true
 AZURE_COST_API_DELAY_MS=5000
 AZURE_COST_MAX_RETRIES=5
 ```
 
 ### Live Data Integrity
 
-- The app is configured for **live data only** by default.
-- If Azure Cost Management API requests fail, report generation stops instead of using synthetic data.
+- The app always uses **live Azure Cost Management data**.
+- If Azure Cost Management API requests fail, report generation stops instead of using fake or synthetic data.
+- Largest daily changes compare complete days only; the current partial day remains visible in daily totals.
 - Throttling controls are configurable to trade speed for reliability:
   - `AZURE_COST_API_DELAY_MS`
   - `AZURE_COST_MAX_RETRIES`

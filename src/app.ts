@@ -150,7 +150,7 @@ class FinOpsAssessmentApp {
             console.log(`${colors.dim(date)}${padding}${colors.value(formatCurrency(day.cost, day.currency))}`);
         });
 
-        console.log('\n' + colors.subheader('LARGEST DAILY CHANGES'));
+        console.log('\n' + colors.subheader('LARGEST DAILY CHANGES (COMPLETE DAYS ONLY)'));
         console.log(colors.separator('-'.repeat(60)));
 
         if (report.fluctuations.length === 0) {
@@ -184,7 +184,8 @@ class FinOpsAssessmentApp {
             });
         }
 
-        console.log('\n' + colors.dim('Run with --full for the legacy comprehensive assessment, recommendations, VM analysis, and HTML report.'));
+        console.log('\n' + colors.dim(`Data source: ${report.dataProvenance.source} (${report.dataProvenance.mode.toUpperCase()}); fake data is never used.`));
+        console.log(colors.dim('Run with --full for the legacy comprehensive assessment, recommendations, VM analysis, and HTML report.'));
         console.log(colors.separator('='.repeat(60)));
     }
 

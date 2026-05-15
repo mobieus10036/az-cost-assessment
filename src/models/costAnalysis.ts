@@ -39,6 +39,11 @@ export interface DailyCostFluctuation {
     topServiceDrivers: ServiceCostDelta[];
 }
 
+export interface DailyCostFluctuationInput {
+    dailyCosts: CostDataPoint[];
+    dailyServiceCosts: DailyServiceCostPoint[];
+}
+
 export interface DailySpendSummary {
     subscriptionId: string;
     scope: string;
@@ -58,10 +63,11 @@ export interface DailySpendChangeReport {
     dailyCosts: CostDataPoint[];
     serviceTotals: CostByService[];
     fluctuations: DailyCostFluctuation[];
+    dataProvenance: DataProvenance;
 }
 
 export interface DataProvenance {
-    mode: 'live' | 'fallback';
+    mode: 'live';
     source: string;
     generatedFromFallback: boolean;
     queryPolicy: {

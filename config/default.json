@@ -4,7 +4,6 @@
     "tenantId": "",
     "scope": "",
     "costManagement": {
-      "liveDataOnly": true,
       "apiDelayMs": 5000,
       "maxRetries": 5,
       "retryBaseDelayMs": 15000,

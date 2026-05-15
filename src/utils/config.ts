@@ -9,7 +9,6 @@ export interface AppConfig {
         tenantId: string;
         scope: string;
         costManagement: {
-            liveDataOnly: boolean;
             apiDelayMs: number;
             maxRetries: number;
             retryBaseDelayMs: number;
@@ -108,9 +107,6 @@ class ConfigService {
                 tenantId: process.env.AZURE_TENANT_ID || cfg.azure?.tenantId || '',
                 scope: process.env.AZURE_SCOPE || cfg.azure?.scope || `/subscriptions/${process.env.AZURE_SUBSCRIPTION_ID || cfg.azure?.subscriptionId}`,
                 costManagement: {
-                    liveDataOnly: process.env.AZURE_COST_LIVE_DATA_ONLY
-                        ? process.env.AZURE_COST_LIVE_DATA_ONLY.toLowerCase() === 'true'
-                        : (cfg.azure?.costManagement?.liveDataOnly ?? true),
                     apiDelayMs: parseInt(process.env.AZURE_COST_API_DELAY_MS || String(cfg.azure?.costManagement?.apiDelayMs || 5000), 10),
                     maxRetries: parseInt(process.env.AZURE_COST_MAX_RETRIES || String(cfg.azure?.costManagement?.maxRetries || 5), 10),
                     retryBaseDelayMs: parseInt(process.env.AZURE_COST_RETRY_BASE_DELAY_MS || String(cfg.azure?.costManagement?.retryBaseDelayMs || 15000), 10),

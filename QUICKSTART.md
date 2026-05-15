@@ -86,6 +86,8 @@ After setup, the analyzer will:
 3. Attribute the largest changes to contributing services
 4. Save a JSON report to the `reports/` folder
 
+Largest daily changes compare complete days only. Today's partial spend is still shown in daily totals, but it is not used to flag fluctuations.
+
 For the broader legacy assessment with trends, recommendations, VM analysis, and HTML output, run:
 
 ```bash
