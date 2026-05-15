@@ -75,10 +75,16 @@ Check your permissions:
 az role assignment list --assignee YOUR_EMAIL --output table
 ```
 
-### 6. Run the analysis
+### 6. Run the default daily spend change analysis
 
 ```powershell
 npm start
+```
+
+Full legacy assessment:
+
+```powershell
+npm run full
 ```
 
 Development mode:
@@ -90,8 +96,9 @@ npm run dev
 ### 7. Review results
 
 - **Console output**: Summary in terminal
-- **JSON report**: `reports/finops-assessment-<timestamp>.json`
-- **HTML report**: `reports/finops-assessment-<timestamp>.html`
+- **Default JSON report**: `reports/daily-spend-changes-<timestamp>.json`
+- **Full-mode JSON report**: `reports/finops-assessment-<timestamp>.json`
+- **Full-mode HTML report**: `reports/finops-assessment-<timestamp>.html`
 - **Logs**: `logs/` directory
 
 ## Troubleshooting
@@ -131,6 +138,7 @@ npm run typecheck
 npm run setup
 npm run validate
 npm start
+npm run full
 npm run dev
 npm run build
 npm run typecheck
@@ -151,9 +159,11 @@ az-cost-assessment/
 ## What happens when you run it
 
 1. Initialization: authenticates using Azure CLI context
-2. Data collection: retrieves recent cost and resource data
-3. Analysis: trend, anomaly, and optimization logic runs
-4. Reporting: writes summary to console and JSON/HTML report files
+2. Data collection: retrieves recent daily costs grouped by service
+3. Analysis: identifies daily spend changes and service drivers
+4. Reporting: writes summary to console and a JSON report file
+
+`npm run full` runs the broader assessment with trend, anomaly, recommendation, VM, JSON, and HTML reporting.
 
 ## Next steps
 

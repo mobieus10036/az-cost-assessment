@@ -8,7 +8,7 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 
-**A specialized Azure FinOps investigation tool for critical cost questions.** Start with one high-value question: when daily costs move, which service caused it?
+**A specialized Azure spend investigation tool for one critical admin question:** when daily Azure costs move, which services caused the change?
 
 > 🚀 Part of the Mobieus Rapid Assessment Suite — Accelerate your Azure security and cost insights.
 
@@ -16,11 +16,12 @@
 
 ## ✨ Features
 
-### 🎯 Specialized Investigation Features
+### 🎯 Default Investigation Workflow
 
 - **Daily fluctuation attribution (primary feature)** — Detect significant day-over-day changes and identify the services that drove the delta
 - **Driver ranking** — Rank top service contributors for each fluctuation day pair
-- **Evidence-first outputs** — Show previous day cost, current day cost, and service-level delta in console, JSON, and HTML report
+- **Evidence-first outputs** — Show previous day cost, current day cost, and service-level delta in console and JSON
+- **Fast default path** — Uses a focused daily-by-service Cost Management query instead of running every analysis engine
 
 ### 📊 Supporting Cost Intelligence
 
@@ -62,8 +63,11 @@ git clone https://github.com/mobieus10036/az-cost-assessment.git
 cd az-cost-assessment
 npm install
 
-# Run (interactive setup on first run)
+# Run the focused daily spend change report (interactive setup on first run)
 npm start
+
+# Optional: run the legacy comprehensive assessment
+npm run full
 ```
 
 The tool will automatically:
@@ -74,7 +78,7 @@ The tool will automatically:
 4. ⚙️ Use selected subscription/tenant context at runtime (no hardcoded IDs required)
 5. 🕒 Let you choose analysis window (`7`, `30`, `90`, or custom; default `30`)
 6. 💾 Optionally save selected subscription as default for future runs
-7. 📊 Generate comprehensive cost analysis
+7. 📊 Generate a focused daily spend change report
 
 **See [QUICKSTART.md](QUICKSTART.md) for detailed walkthrough.**
 
@@ -178,6 +182,12 @@ Edit `config/default.json` to customize:
   }
 }
 ```
+
+### Default vs Full Mode
+
+`npm start` answers the fastest admin question first: daily spend changes and the services contributing to those changes.
+
+`npm run full` runs the broader legacy assessment with trends, statistical anomaly detection, recommendations, VM analysis, JSON export, and HTML reporting.
 
 ---
 

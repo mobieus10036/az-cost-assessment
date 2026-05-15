@@ -1,7 +1,7 @@
 {
   "name": "az-cost-assessment",
   "version": "1.0.0",
-  "description": "A simple local-first Azure cost analysis tool for tracking spending, identifying trends, and optimizing cloud costs. No Azure Storage dependencies required.",
+  "description": "A focused local-first Azure cost tool for finding daily spend changes and the services driving them.",
   "main": "src/app.ts",
   "engines": {
     "node": ">=18.0.0",
@@ -29,6 +29,7 @@
   "homepage": "https://github.com/mobieus10036/az-cost-assessment#readme",
   "scripts": {
     "start": "ts-node src/app.ts",
+    "full": "ts-node src/app.ts --full",
     "setup": "ts-node src/utils/interactiveSetup.ts",
     "test": "jest",
     "test:coverage": "jest --coverage",

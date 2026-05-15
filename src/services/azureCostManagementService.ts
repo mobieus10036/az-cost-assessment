@@ -205,6 +205,168 @@ export class AzureCostManagementService {
     }
 
     /**
+     * Get the lean daily service cost dataset used by the default spend-change workflow.
+     * This intentionally avoids forecast, resource inventory, and optimization queries.
+     */
+    public async getDailyServiceCostData(days: number = 30): Promise<{
+        startDate: string;
+        endDate: string;
+        totalCost: number;
+        currency: string;
+        dailyCosts: CostDataPoint[];
+        dailyServiceCosts: DailyServiceCostPoint[];
+        costByService: CostByService[];
+    }> {
+        const endDate = new Date();
+        const startDate = subDays(endDate, days);
+        const cacheKey = this.getCacheKey(startDate, endDate, 'daily-service-costs');
+        const cachedResult = this.getCachedResult(cacheKey);
+
+        if (cachedResult) {
+            return cachedResult;
+        }
+
+        try {
+            logInfo(`Querying daily service costs from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}...`);
+
+            const dailyServiceQuery = {
+                type: "Usage",
+                timeframe: "Custom",
+                timePeriod: {
+                    from: startDate.toISOString(),
+                    to: endDate.toISOString()
+                },
+                dataset: {
+                    granularity: "Daily",
+                    aggregation: {
+                        totalCost: {
+                            name: "Cost",
+                            function: "Sum"
+                        }
+                    },
+                    grouping: [
+                        {
+                            type: "Dimension",
+                            name: "ServiceName"
+                        }
+                    ]
+                }
+            };
+
+            const result = await this.executeWithRetry(
+                () => this.client.query.usage(this.scope, dailyServiceQuery as any),
+                'daily service costs query'
+            );
+
+            const dailyServiceCosts: DailyServiceCostPoint[] = [];
+            const dailyTotals = new Map<string, { cost: number; currency: string }>();
+            const serviceTotals = new Map<string, { cost: number; currency: string; category: string }>();
+            let totalCost = 0;
+            let currency = 'USD';
+
+            if (result.rows && result.rows.length > 0) {
+                const costIndex = result.columns?.findIndex((col: any) => col.name === 'Cost') ?? -1;
+                const dateIndex = result.columns?.findIndex((col: any) => col.name === 'UsageDate') ?? -1;
+                const currencyIndex = result.columns?.findIndex((col: any) => col.name === 'Currency') ?? -1;
+                const serviceIndex = result.columns?.findIndex((col: any) => col.name === 'ServiceName') ?? -1;
+
+                result.rows.forEach((row: any) => {
+                    const cost = costIndex >= 0 ? parseFloat(row[costIndex]) : 0;
+                    const rawDate = dateIndex >= 0 ? row[dateIndex] : '';
+                    const rowCurrency = currencyIndex >= 0 ? row[currencyIndex] : currency;
+                    const serviceName = serviceIndex >= 0 ? row[serviceIndex] : 'Unknown';
+
+                    if (!serviceName || cost <= 0) {
+                        return;
+                    }
+
+                    const date = this.parseUsageDate(rawDate);
+                    const serviceCategory = this.categorizeService(serviceName);
+                    currency = rowCurrency || currency;
+                    totalCost += cost;
+
+                    dailyServiceCosts.push({
+                        date,
+                        serviceName,
+                        serviceCategory,
+                        cost,
+                        currency
+                    });
+
+                    const existingDay = dailyTotals.get(date) || { cost: 0, currency };
+                    dailyTotals.set(date, {
+                        cost: existingDay.cost + cost,
+                        currency
+                    });
+
+                    const existingService = serviceTotals.get(serviceName) || {
+                        cost: 0,
+                        currency,
+                        category: serviceCategory
+                    };
+                    serviceTotals.set(serviceName, {
+                        cost: existingService.cost + cost,
+                        currency,
+                        category: serviceCategory
+                    });
+                });
+            }
+
+            const dailyCosts: CostDataPoint[] = Array.from(dailyTotals.entries())
+                .map(([date, value]) => ({
+                    date,
+                    cost: value.cost,
+                    currency: value.currency
+                }))
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+            const costByService: CostByService[] = Array.from(serviceTotals.entries())
+                .map(([serviceName, value]) => ({
+                    serviceName,
+                    serviceCategory: value.category,
+                    cost: value.cost,
+                    currency: value.currency,
+                    percentageOfTotal: totalCost > 0 ? (value.cost / totalCost) * 100 : 0
+                }))
+                .sort((a, b) => b.cost - a.cost);
+
+            const response = {
+                startDate: startDate.toISOString(),
+                endDate: endDate.toISOString(),
+                totalCost,
+                currency,
+                dailyCosts,
+                dailyServiceCosts,
+                costByService
+            };
+
+            logInfo(`Daily service cost query complete: ${totalCost.toFixed(2)} ${currency} across ${dailyCosts.length} days and ${costByService.length} services`);
+            this.setCachedResult(cacheKey, response);
+            return response;
+        } catch (error) {
+            logError(`Error querying daily service costs: ${error}`);
+            if (this.LIVE_DATA_ONLY) {
+                throw new Error(
+                    `Live daily service cost query failed and fallback is disabled (AZURE_COST_LIVE_DATA_ONLY=true). ` +
+                    `Please retry later or increase AZURE_COST_API_DELAY_MS / AZURE_COST_MAX_RETRIES.`
+                );
+            }
+
+            logWarning('Falling back to mock daily service data due to API error');
+            const fallback = this.generateMockCostData(startDate, endDate);
+            return {
+                startDate: startDate.toISOString(),
+                endDate: endDate.toISOString(),
+                totalCost: fallback.totalCost,
+                currency: fallback.currency,
+                dailyCosts: fallback.dailyCosts,
+                dailyServiceCosts: fallback.dailyServiceCosts,
+                costByService: fallback.costByService
+            };
+        }
+    }
+
+    /**
      * Get current month-to-date cost data
      */
     public async getCurrentCostData(): Promise<CurrentCostData> {
@@ -638,6 +800,25 @@ export class AzureCostManagementService {
             logWarning('Falling back to mock data due to API error');
             return this.generateMockCostData(startDate, endDate);
         }
+    }
+
+    private parseUsageDate(date: any): string {
+        if (typeof date === 'number') {
+            const dateStr = date.toString();
+            const year = parseInt(dateStr.substring(0, 4), 10);
+            const month = parseInt(dateStr.substring(4, 6), 10) - 1;
+            const day = parseInt(dateStr.substring(6, 8), 10);
+            return new Date(year, month, day).toISOString();
+        }
+
+        if (typeof date === 'string' && date.length === 8) {
+            const year = parseInt(date.substring(0, 4), 10);
+            const month = parseInt(date.substring(4, 6), 10) - 1;
+            const day = parseInt(date.substring(6, 8), 10);
+            return new Date(year, month, day).toISOString();
+        }
+
+        return date;
     }
 
     /**
